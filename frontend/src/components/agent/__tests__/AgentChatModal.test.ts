@@ -67,6 +67,20 @@ describe('AgentChatModal Component Unit Tests (Comprehensive Coverage)', () => {
     expect(wrapper.find('.agent-send-btn').exists()).toBe(true);
   });
 
+  it('handles health check returning ok: false', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 503 }));
+    const wrapper = mount(AgentChatModal);
+    await flushPromises();
+    expect(wrapper.find('.modal-overlay').exists()).toBe(true);
+  });
+
+  it('handles health check throwing error', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('Network failure')));
+    const wrapper = mount(AgentChatModal);
+    await flushPromises();
+    expect(wrapper.find('.modal-overlay').exists()).toBe(true);
+  });
+
   it('displays quick prompt chips and context banner', () => {
     const wrapper = mount(AgentChatModal);
     const contextBanner = wrapper.find('.context-banner');
@@ -251,7 +265,26 @@ describe('AgentChatModal Component Unit Tests (Comprehensive Coverage)', () => {
           readiness_score: 88,
           status_label: 'Event Ready',
           critical_flags: ['Sign photographer contract'],
+          critical_risks: ['Photographer delay', 'Over budget by 5%'],
           strengths: ['Venue confirmed', 'Budget on track'],
+        },
+      },
+      {
+        type: 'update_event',
+        payload: {
+          event: {
+            id: 'evt-1',
+            name: 'Updated Sangeet Night',
+            event_type: 'wedding',
+            start_date: '2026-11-20',
+            planned_budget: 25000,
+            expected_guest_count: 180,
+            venue_name: 'Taj Palace',
+            venue_address: 'Main St',
+            days_until: 45,
+            status: 'planning',
+          },
+          message: 'Celebration updated successfully.',
         },
       },
       {
@@ -261,14 +294,42 @@ describe('AgentChatModal Component Unit Tests (Comprehensive Coverage)', () => {
         },
       },
       {
+        type: 'calculate_budget_breakdown',
+        payload: {
+          total_budget: 50000,
+          guest_count: 200,
+          per_guest_budget: 250,
+          currency: 'USD',
+          breakdown: [
+            { category: 'Venue', percentage: '40%', recommended_amount: 20000 },
+            { category: 'Catering', percentage: '30%', recommended_amount: 15000 },
+          ],
+        },
+      },
+      {
         type: 'generate_day_of_run_sheet',
         payload: {
           event_type: 'wedding',
           total_milestones: 2,
-          schedule: [
+          timeline: [
             { time: '10:00 AM', activity: 'Setup & soundcheck', owner: 'DJ', location: 'Hall', notes: 'Verify mic' },
           ],
         },
+      },
+      {
+        type: 'get_event_details',
+        payload: {
+          event: {
+            id: 'evt-1',
+            name: 'Priya & Rahul Wedding',
+            expected_guest_count: 250,
+            venue_name: 'Taj West End',
+          },
+        },
+      },
+      {
+        type: 'unknown_card_type',
+        payload: {},
       },
     ];
 
@@ -294,7 +355,26 @@ describe('AgentChatModal Component Unit Tests (Comprehensive Coverage)', () => {
       await input.setValue(`Test ${card.type}`);
       await wrapper.find('form.agent-input-form').trigger('submit');
       await flushPromises();
-      expect(wrapper.find('.a2ui-card').exists()).toBe(true);
+
+      if (card.type === 'list_events') {
+        const item = wrapper.find('.interactive-list-item');
+        if (item.exists()) {
+          await item.trigger('click');
+          await wrapper.vm.$nextTick();
+          expect((wrapper.find('.agent-input').element as HTMLInputElement).value).toContain('Show details');
+        }
+        const selectBtn = wrapper.find('button[title="Select this event into chat input"]');
+        if (selectBtn.exists()) {
+          await selectBtn.trigger('click');
+          await wrapper.vm.$nextTick();
+          expect((wrapper.find('.agent-input').element as HTMLInputElement).value).toContain('Show details');
+        }
+        const actionPills = wrapper.findAll('.item-actions-row .action-pill');
+        for (const pill of actionPills) {
+          await pill.trigger('click');
+          await wrapper.vm.$nextTick();
+        }
+      }
 
       if (card.type === 'recommend_vendors') {
         const questionItem = wrapper.find('.vendor-question-item');
@@ -325,7 +405,76 @@ describe('AgentChatModal Component Unit Tests (Comprehensive Coverage)', () => {
           expect((wrapper.find('.agent-input').element as HTMLInputElement).value).toContain('How do I complete task');
         }
       }
+
+      if (card.type === 'analyze_event_readiness') {
+        const riskItem = wrapper.find('.interactive-list-item');
+        if (riskItem.exists()) {
+          await riskItem.trigger('click');
+          await wrapper.vm.$nextTick();
+          expect((wrapper.find('.agent-input').element as HTMLInputElement).value).toContain('How can I mitigate this risk');
+        }
+        const chipBtn = wrapper.find('.interactive-list-item .btn-select-chip');
+        if (chipBtn.exists()) {
+          await chipBtn.trigger('click');
+          await wrapper.vm.$nextTick();
+          expect((wrapper.find('.agent-input').element as HTMLInputElement).value).toContain('How can I mitigate this risk');
+        }
+      }
+
+      if (card.type === 'calculate_budget_breakdown') {
+        const row = wrapper.find('.clickable-table-row');
+        if (row.exists()) {
+          await row.trigger('click');
+          await wrapper.vm.$nextTick();
+          expect((wrapper.find('.agent-input').element as HTMLInputElement).value).toContain('Tell me vendor options');
+        }
+        const chipBtn = wrapper.find('.clickable-table-row .btn-select-chip');
+        if (chipBtn.exists()) {
+          await chipBtn.trigger('click');
+          await wrapper.vm.$nextTick();
+          expect((wrapper.find('.agent-input').element as HTMLInputElement).value).toContain('Find top vendors');
+        }
+      }
+
+      if (card.type === 'generate_day_of_run_sheet') {
+        const slot = wrapper.find('.clickable-slot');
+        if (slot.exists()) {
+          await slot.trigger('click');
+          await wrapper.vm.$nextTick();
+          expect((wrapper.find('.agent-input').element as HTMLInputElement).value).toContain('Can we adjust timing');
+        }
+        const chipBtn = wrapper.find('.clickable-slot .btn-select-chip');
+        if (chipBtn.exists()) {
+          await chipBtn.trigger('click');
+          await wrapper.vm.$nextTick();
+          expect((wrapper.find('.agent-input').element as HTMLInputElement).value).toContain('Adjust schedule instructions');
+        }
+      }
     }
+  });
+
+  it('handles HTTP error status when response is not ok', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockImplementation((url: string) => {
+        if (url.endsWith('/health')) {
+          return Promise.resolve({ ok: true, status: 200, json: async () => ({}) });
+        }
+        return Promise.resolve({
+          ok: false,
+          status: 500,
+          json: async () => ({ error: 'Internal server error' }),
+        });
+      })
+    );
+
+    const wrapper = mount(AgentChatModal);
+    const input = wrapper.find('.agent-input');
+    await input.setValue('Server error query');
+    await wrapper.find('form.agent-input-form').trigger('submit');
+    await flushPromises();
+
+    expect(wrapper.text()).toContain('Could not reach ADK Agent Service');
   });
 
   it('handles network error gracefully and displays alert bubble', async () => {

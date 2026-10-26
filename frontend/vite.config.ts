@@ -8,6 +8,12 @@ export default defineConfig({
   test: {
     environment: 'happy-dom',
     globals: true,
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html'],
+      include: ['src/components/**/*.{vue,ts}', 'src/stores/**/*.{ts}'],
+      exclude: ['src/components/**/__tests__/**', 'src/stores/**/__tests__/**'],
+    },
   },
 })
 
