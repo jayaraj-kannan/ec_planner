@@ -37,19 +37,104 @@ ec_planner/
 └── package.json          # Workspace root scripts
 ```
 
-### Quick Start: Running Services
+### 🚀 Quick Start: Starting Services & Development Commands
 
-#### 1. Start the Frontend (Port 5173):
+#### 1. Prerequisites & Environment Setup
+Before starting the services, ensure you have the following installed and configured:
+- **Node.js** (v18+) and **npm**
+- **Python** (3.10+) and [**uv**](https://github.com/astral-sh/uv) (recommended) or standard `pip` / `venv`
+- **Gemini API Key**:
+  ```bash
+  # Inside services/agent, copy the example environment file and configure your API key
+  cp services/agent/.env.example services/agent/.env
+
+  # Add your Google Gemini API key:
+  # GOOGLE_API_KEY=your_gemini_api_key_here
+  ```
+
+---
+
+#### 2. Install Dependencies
+Run these commands from the repository root:
 ```bash
+# Install frontend npm dependencies
+cd frontend && npm install && cd ..
+
+# Install agent Python dependencies using uv (creates virtual environment automatically)
+npm run install:agent
+# Alternative direct command:
+# cd services/agent && uv sync
+```
+
+---
+
+#### 3. Starting the Services
+
+##### A. Start the Frontend Web App (Vite Dev Server)
+```bash
+# Starts the Vue 3 + TypeScript client with hot-reload enabled
 npm run dev:frontend
+
+# 🌐 Access the Web Application at:
+# http://localhost:5173
+```
+- **Port:** `5173`
+- **Features:** Complete event management dashboard, checklist, budget calculator, RSVP tracker, live run sheet coordinator, and PlanCraft AI Copilot modal.
+
+##### B. Start the ADK Agent Backend (FastAPI Service)
+In a separate terminal tab or window:
+```bash
+# Starts the FastAPI server running the Google ADK Agent on port 8000 with auto-reload
+npm run dev:agent
+
+# Or directly inside the services/agent folder:
+# cd services/agent && uv run uvicorn server:app --reload --host 0.0.0.0 --port 8000
+```
+- **Port:** `8000`
+- **Health Check:** `http://localhost:8000/health` (returns `{"status":"ok", "service":"adk-agent"}`)
+- **Interactive API Docs (Swagger):** `http://localhost:8000/docs`
+- **Features:** Exposes `/chat` endpoint with Gemini 2.5 and native A2UI payload generation (interactive cards for event creation, milestone checklists, vendor vetting, readiness analysis, and budget breakdowns).
+
+##### C. Optional: Start the ADK Web Dev UI
+To interact with the agent directly through Google ADK's native web interface:
+```bash
+# Starts the ADK native web playground on port 8080
+npm run dev:adk-web
+```
+- **Port:** `8080`
+- **UI:** `http://localhost:8080`
+
+---
+
+#### 4. Running Unit Tests & Code Coverage
+All tests can be executed either individually or as a combined full-stack suite:
+
+```bash
+# 🧪 Run all test suites across frontend and backend:
+npm test
+
+# 📊 Run full code coverage report across frontend and backend:
+npm run test:coverage
+
+# 🎯 Frontend-only tests (Vitest with 100% Component Line Coverage):
+npm run test:frontend
+npm run test:coverage:frontend
+
+# 🐍 Backend-only agent tests (Pytest with coverage report):
+npm run test:agent
+npm run test:coverage:agent
 ```
 
-#### 2. Start the ADK Agent Service (Port 8000):
-```bash
-npm run dev:agent
-# or inside services/agent:
-cd services/agent && uv run uvicorn server:app --reload --port 8000
-```
+---
+
+#### 5. Stopping / Killing Services
+To gracefully stop the running services:
+- Press `Ctrl + C` in the respective terminal windows.
+- Or kill running processes by port from the terminal:
+  ```bash
+  # Terminates any processes running on frontend (5173) or agent (8000)
+  lsof -ti :5173 -ti :8000 | xargs kill -9
+  ```
 
 ------------------------------------------------------------------------
 
