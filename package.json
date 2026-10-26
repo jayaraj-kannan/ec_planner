@@ -11,6 +11,9 @@
     "dev:adk-web": "cd services/agent && uv run adk web --port 8080 --allow_origins '*'",
     "install:agent": "cd services/agent && uv sync",
     "test": "npm run test:agent && npm run test:frontend",
+    "test:coverage": "npm run test:coverage:agent && npm run test:coverage:frontend",
+    "test:coverage:frontend": "npm run test:coverage --prefix frontend",
+    "test:coverage:agent": "cd services/agent && .venv/bin/python -m pytest --cov=app --cov=server --cov-report=term-missing",
     "test:frontend": "npm run test --prefix frontend",
     "test:agent": "cd services/agent && .venv/bin/python -m pytest tests/ -v"
   },

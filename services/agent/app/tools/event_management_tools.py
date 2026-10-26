@@ -11,6 +11,7 @@ Enables the ADK agent to:
 import os
 import sqlite3
 import time
+import uuid
 from datetime import datetime
 from typing import Any, Optional
 
@@ -133,7 +134,7 @@ def create_event(
     if expected_guest_count <= 0:
         return {"status": "error", "message": "Expected guest count must be at least 1."}
 
-    event_id = f"evt-{int(time.time())}"
+    event_id = f"evt-{int(time.time() * 1000)}-{uuid.uuid4().hex[:6]}"
     budget_minor = int(planned_budget * 100)
 
     conn = get_db()

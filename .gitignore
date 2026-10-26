@@ -33,4 +33,6 @@ venv/
 adk_sessions.db
 .pytest_cache/
 .coverage
+coverage/
+htmlcov/
 .vite

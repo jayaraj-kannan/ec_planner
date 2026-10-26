@@ -554,7 +554,9 @@ export const actions = {
 
   // Reset to original mock data
   resetToMockDefaults() {
-    localStorage.removeItem(STORAGE_KEY);
+    if (typeof localStorage !== 'undefined' && typeof localStorage.removeItem === 'function') {
+      localStorage.removeItem(STORAGE_KEY);
+    }
     state.events = [...INITIAL_EVENTS];
     state.categories = [...INITIAL_CATEGORIES];
     state.tasks = [...INITIAL_TASKS];

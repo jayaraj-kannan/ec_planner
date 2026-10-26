@@ -173,9 +173,34 @@ class TestAnalyzeEventReadiness:
             budget_amount=10000.0,
         )
 
-        assert result["readiness_score"] < 60
-        assert result["status_color"] in ["amber", "red"]
+        assert result["readiness_score"] < 50
+        assert result["status_label"] == "Critical Action Required"
+        assert result["status_color"] == "red"
         assert len(result["critical_risks"]) >= 2
         alerts = " ".join(result["critical_risks"]).lower()
         assert "budget" in alerts
         assert "rsvp" in alerts or "tasks" in alerts
+
+    def test_medium_readiness_event(self):
+        # Moderate tasks and guests yielding score between 50 and 80
+        result = analyze_event_readiness(
+            completed_tasks=13,
+            total_tasks=20,
+            confirmed_guests=65,
+            total_invited=100,
+            spent_amount=7000.0,
+            budget_amount=10000.0,
+        )
+        assert 50 <= result["readiness_score"] < 80
+        assert result["status_label"] == "In Progress - Attention Needed"
+        assert result["status_color"] == "amber"
+
+    def test_baby_shower_budget_allocation(self):
+        result = calculate_budget_breakdown(
+            total_budget=8000.0,
+            event_type="baby_shower",
+            guest_count=45,
+        )
+        assert result["event_type"] == "baby_shower"
+        assert any("Brunch" in item["category"] for item in result["breakdown"])
+        assert any("Backdrop" in item["category"] for item in result["breakdown"])

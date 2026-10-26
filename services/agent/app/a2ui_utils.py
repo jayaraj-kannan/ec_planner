@@ -25,9 +25,19 @@ Robustness notes (why this file is more than a one-liner):
 import json
 import re
 
+from typing import Any
 from google.genai import types
-from google.adk.agents.callback_context import CallbackContext
-from google.adk.models.llm_response import LlmResponse
+
+try:
+    from google.adk.agents.callback_context import CallbackContext
+    from google.adk.models.llm_response import LlmResponse
+except ImportError:
+    CallbackContext = Any  # type: ignore
+
+    class LlmResponse:  # type: ignore
+        def __init__(self, content=None, custom_metadata=None):
+            self.content = content
+            self.custom_metadata = custom_metadata or {}
 
 # A2UI message kinds this renderer understands (v0.8).
 _A2UI_KEYS = ("beginRendering", "surfaceUpdate", "dataModelUpdate", "deleteSurface")
