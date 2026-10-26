@@ -18,6 +18,7 @@ import DocumentsView from './components/documents/DocumentsView.vue';
 import SettingsView from './components/settings/SettingsView.vue';
 import CreateEventModal from './components/events/CreateEventModal.vue';
 import RunSheetLiveModal from './components/schedule/RunSheetLiveModal.vue';
+import AgentChatModal from './components/agent/AgentChatModal.vue';
 import {
   LayoutDashboard,
   CalendarDays,
@@ -115,6 +116,7 @@ import {
     <!-- Global Modals -->
     <CreateEventModal v-if="state.isCreateEventModalOpen" />
     <RunSheetLiveModal v-if="state.isRunSheetLiveModalOpen" />
+    <AgentChatModal />
   </div>
 </template>
 

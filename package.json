@@ -1,25 +1,24 @@
 {
-  "name": "ec-planner-frontend",
-  "private": true,
-  "version": "0.0.0",
-  "type": "module",
+  "name": "ec-planner",
+  "version": "1.0.0",
+  "description": "PlanCraft — Event & Celebration Planner with Google ADK Agent Service",
   "scripts": {
-    "dev": "vite",
-    "build": "vue-tsc -b && vite build",
-    "preview": "vite preview"
+    "dev": "npm run dev:frontend",
+    "dev:frontend": "npm run dev --prefix frontend",
+    "build:frontend": "npm run build --prefix frontend",
+    "preview:frontend": "npm run preview --prefix frontend",
+    "dev:agent": "cd services/agent && uv run uvicorn server:app --reload --port 8000",
+    "dev:adk-web": "cd services/agent && uv run adk web --port 8080 --allow_origins '*'",
+    "install:agent": "cd services/agent && uv sync",
+    "test": "npm run test:agent && npm run test:frontend",
+    "test:frontend": "npm run test --prefix frontend",
+    "test:agent": "cd services/agent && .venv/bin/python -m pytest tests/ -v"
   },
-  "dependencies": {
-    "canvas-confetti": "^1.9.4",
-    "lucide-vue-next": "^1.0.0",
-    "vue": "^3.5.44"
-  },
-  "devDependencies": {
-    "@types/canvas-confetti": "^1.9.0",
-    "@types/node": "^24.19.2",
-    "@vitejs/plugin-vue": "^6.0.10",
-    "@vue/tsconfig": "^0.9.1",
-    "typescript": "~6.0.3",
-    "vite": "^8.3.4",
-    "vue-tsc": "^3.3.13"
-  }
+  "keywords": [
+    "event-planner",
+    "adk",
+    "google-adk",
+    "vue3",
+    "fastapi"
+  ]
 }

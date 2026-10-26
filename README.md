@@ -18,6 +18,41 @@ support professional event planners and multi-event organizations later.
 
 ------------------------------------------------------------------------
 
+## 🏗️ Multi-Service Architecture
+
+```text
+ec_planner/
+├── frontend/             # Vue 3 + TypeScript Client App (Vite, Pinia-style store, Lucide icons)
+│   ├── src/              # Dashboard, Checklist, Budget, Schedule & AI Copilot modal
+│   └── package.json
+├── services/
+│   └── agent/            # Google ADK Agent Service (FastAPI, Gemini 2.5, A2UI cards)
+│       ├── app/
+│       │   ├── agent.py          # Core ADK Agent & system prompt
+│       │   ├── a2ui_utils.py     # A2UI cards rendering callback
+│       │   └── tools/            # Function tools: budget, checklist, run sheet, vendors, readiness
+│       ├── server.py             # FastAPI service (/chat, /health, /api/tools)
+│       ├── pyproject.toml        # uv package configuration
+│       └── Dockerfile            # Container deployment for Google Cloud Run
+└── package.json          # Workspace root scripts
+```
+
+### Quick Start: Running Services
+
+#### 1. Start the Frontend (Port 5173):
+```bash
+npm run dev:frontend
+```
+
+#### 2. Start the ADK Agent Service (Port 8000):
+```bash
+npm run dev:agent
+# or inside services/agent:
+cd services/agent && uv run uvicorn server:app --reload --port 8000
+```
+
+------------------------------------------------------------------------
+
 ## 1. Product Vision
 
 **Build a modern, approachable, self-service event planner** that helps

@@ -21,6 +21,16 @@ dist-ssr
 *.ntvs*
 *.njsproj
 *.sln
-*.sw?
 .env
-.env.*  
+
+# Python / ADK Agent
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+*.db
+adk_sessions.db
+.pytest_cache/
+.coverage
+.vite

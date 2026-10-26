@@ -12,6 +12,7 @@ import {
   Plus,
   ChevronDown,
   Menu,
+  Sparkles,
 } from 'lucide-vue-next';
 
 const isNotifOpen = ref(false);
@@ -79,6 +80,17 @@ function onSelectEvent(e: Event) {
       >
         <PlayCircle :size="14" />
         <span class="btn-text-responsive">Run Sheet</span>
+      </button>
+
+      <!-- AI Assistant Button -->
+      <button
+        class="btn btn-sm nav-btn-compact"
+        style="background: linear-gradient(135deg, #0f766e 0%, #0d9488 100%); color: white; border: none; font-weight: 600"
+        @click="actions.openAgentChatModal()"
+        title="Open PlanCraft ADK AI Assistant"
+      >
+        <Sparkles :size="14" />
+        <span class="btn-text-responsive">AI Copilot</span>
       </button>
 
       <!-- New Event Button -->

@@ -52,6 +52,7 @@ interface State {
   notifications: NotificationItem[];
   isCreateEventModalOpen: boolean;
   isRunSheetLiveModalOpen: boolean;
+  isAgentChatModalOpen: boolean;
   isMobileMenuOpen: boolean;
   searchQuery: string;
 }
@@ -61,27 +62,30 @@ const STORAGE_KEY = 'ec_planner_state_v1';
 
 function loadInitialState(): State {
   try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      return {
-        activeTab: parsed.activeTab || 'dashboard',
-        activeEventId: parsed.activeEventId || 'evt-1',
-        events: parsed.events || INITIAL_EVENTS,
-        categories: parsed.categories || INITIAL_CATEGORIES,
-        tasks: parsed.tasks || INITIAL_TASKS,
-        expenses: parsed.expenses || INITIAL_EXPENSES,
-        guests: parsed.guests || INITIAL_GUESTS,
-        vendors: parsed.vendors || INITIAL_VENDORS,
-        schedule: parsed.schedule || INITIAL_SCHEDULE,
-        arrangements: parsed.arrangements || INITIAL_ARRANGEMENTS,
-        documents: parsed.documents || INITIAL_DOCUMENTS,
-        notifications: parsed.notifications || INITIAL_NOTIFICATIONS,
-        isCreateEventModalOpen: false,
-        isRunSheetLiveModalOpen: false,
-        isMobileMenuOpen: false,
-        searchQuery: '',
-      };
+    if (typeof localStorage !== 'undefined' && typeof localStorage.getItem === 'function') {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return {
+          activeTab: parsed.activeTab || 'dashboard',
+          activeEventId: parsed.activeEventId || 'evt-1',
+          events: parsed.events || INITIAL_EVENTS,
+          categories: parsed.categories || INITIAL_CATEGORIES,
+          tasks: parsed.tasks || INITIAL_TASKS,
+          expenses: parsed.expenses || INITIAL_EXPENSES,
+          guests: parsed.guests || INITIAL_GUESTS,
+          vendors: parsed.vendors || INITIAL_VENDORS,
+          schedule: parsed.schedule || INITIAL_SCHEDULE,
+          arrangements: parsed.arrangements || INITIAL_ARRANGEMENTS,
+          documents: parsed.documents || INITIAL_DOCUMENTS,
+          notifications: parsed.notifications || INITIAL_NOTIFICATIONS,
+          isCreateEventModalOpen: false,
+          isRunSheetLiveModalOpen: false,
+          isAgentChatModalOpen: false,
+          isMobileMenuOpen: false,
+          searchQuery: '',
+        };
+      }
     }
   } catch (e) {
     console.warn('Could not load saved state from localStorage:', e);
@@ -102,6 +106,7 @@ function loadInitialState(): State {
     notifications: INITIAL_NOTIFICATIONS,
     isCreateEventModalOpen: false,
     isRunSheetLiveModalOpen: false,
+    isAgentChatModalOpen: false,
     isMobileMenuOpen: false,
     searchQuery: '',
   };
@@ -111,25 +116,27 @@ export const state = reactive<State>(loadInitialState());
 
 function persistState() {
   try {
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify({
-        activeTab: state.activeTab,
-        activeEventId: state.activeEventId,
-        events: state.events,
-        categories: state.categories,
-        tasks: state.tasks,
-        expenses: state.expenses,
-        guests: state.guests,
-        vendors: state.vendors,
-        schedule: state.schedule,
-        arrangements: state.arrangements,
-        documents: state.documents,
-        notifications: state.notifications,
-      })
-    );
+    if (typeof localStorage !== 'undefined' && typeof localStorage.setItem === 'function') {
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({
+          activeTab: state.activeTab,
+          activeEventId: state.activeEventId,
+          events: state.events,
+          categories: state.categories,
+          tasks: state.tasks,
+          expenses: state.expenses,
+          guests: state.guests,
+          vendors: state.vendors,
+          schedule: state.schedule,
+          arrangements: state.arrangements,
+          documents: state.documents,
+          notifications: state.notifications,
+        })
+      );
+    }
   } catch (e) {
-    console.error('Failed to persist to localStorage', e);
+    // Graceful fallback for non-browser or test environments
   }
 }
 
@@ -367,6 +374,15 @@ export const actions = {
 
   closeRunSheetLiveModal() {
     state.isRunSheetLiveModalOpen = false;
+  },
+
+  openAgentChatModal() {
+    state.isAgentChatModalOpen = true;
+    state.isMobileMenuOpen = false;
+  },
+
+  closeAgentChatModal() {
+    state.isAgentChatModalOpen = false;
   },
 
   // Tasks actions

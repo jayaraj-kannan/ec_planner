@@ -105,14 +105,26 @@ function setTab(tab: ActiveTab) {
       </button>
     </nav>
 
+    <!-- AI Assistant CTA in Sidebar -->
+    <div style="padding: 6px 12px 0 12px">
+      <button
+        class="btn"
+        style="width: 100%; font-size: 0.8rem; padding: 8px 10px; background: #f0fdfa; color: var(--primary); border: 1px solid #ccfbf1; font-weight: 600"
+        @click="actions.openAgentChatModal()"
+      >
+        <Sparkles :size="14" />
+        <span>Ask AI Copilot</span>
+      </button>
+    </div>
+
     <!-- Create Event CTA in Sidebar -->
-    <div style="padding: 10px 12px">
+    <div style="padding: 8px 12px 10px 12px">
       <button
         class="btn btn-primary"
         style="width: 100%; font-size: 0.8rem; padding: 8px 10px;"
         @click="actions.openCreateEventModal()"
       >
-        <Sparkles :size="14" />
+        <PartyPopper :size="14" />
         <span>+ New Event</span>
       </button>
     </div>
