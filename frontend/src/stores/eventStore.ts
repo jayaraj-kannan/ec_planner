@@ -24,6 +24,24 @@ import {
   INITIAL_DOCUMENTS,
   INITIAL_NOTIFICATIONS,
 } from '../mockData/initialData';
+import {
+  saveEventDoc,
+  deleteEventDoc,
+  saveTaskDoc,
+  deleteTaskDoc,
+  saveExpenseDoc,
+  deleteExpenseDoc,
+  saveGuestDoc,
+  deleteGuestDoc,
+  saveVendorDoc,
+  saveScheduleDoc,
+  saveArrangementDoc,
+  saveCategoryDoc,
+  seedCompleteEventToFirestore,
+  fetchUserEvents,
+  fetchEventSubcollections,
+} from '../services/firestore.service';
+import { authState, registerAuthSyncHooks } from './authStore';
 
 export type ActiveTab =
   | 'dashboard'
@@ -58,7 +76,7 @@ interface State {
 }
 
 // LocalStorage key for persistence
-const STORAGE_KEY = 'ec_planner_state_v1';
+const STORAGE_KEY = 'ec_planner_user_state_v2';
 
 function loadInitialState(): State {
   try {
@@ -68,17 +86,17 @@ function loadInitialState(): State {
         const parsed = JSON.parse(saved);
         return {
           activeTab: parsed.activeTab || 'dashboard',
-          activeEventId: parsed.activeEventId || 'evt-1',
-          events: parsed.events || INITIAL_EVENTS,
-          categories: parsed.categories || INITIAL_CATEGORIES,
-          tasks: parsed.tasks || INITIAL_TASKS,
-          expenses: parsed.expenses || INITIAL_EXPENSES,
-          guests: parsed.guests || INITIAL_GUESTS,
-          vendors: parsed.vendors || INITIAL_VENDORS,
-          schedule: parsed.schedule || INITIAL_SCHEDULE,
-          arrangements: parsed.arrangements || INITIAL_ARRANGEMENTS,
-          documents: parsed.documents || INITIAL_DOCUMENTS,
-          notifications: parsed.notifications || INITIAL_NOTIFICATIONS,
+          activeEventId: parsed.activeEventId || '',
+          events: parsed.events || [],
+          categories: parsed.categories || [],
+          tasks: parsed.tasks || [],
+          expenses: parsed.expenses || [],
+          guests: parsed.guests || [],
+          vendors: parsed.vendors || [],
+          schedule: parsed.schedule || [],
+          arrangements: parsed.arrangements || [],
+          documents: parsed.documents || [],
+          notifications: parsed.notifications || [],
           isCreateEventModalOpen: false,
           isRunSheetLiveModalOpen: false,
           isAgentChatModalOpen: false,
@@ -93,17 +111,17 @@ function loadInitialState(): State {
 
   return {
     activeTab: 'dashboard',
-    activeEventId: 'evt-1',
-    events: INITIAL_EVENTS,
-    categories: INITIAL_CATEGORIES,
-    tasks: INITIAL_TASKS,
-    expenses: INITIAL_EXPENSES,
-    guests: INITIAL_GUESTS,
-    vendors: INITIAL_VENDORS,
-    schedule: INITIAL_SCHEDULE,
-    arrangements: INITIAL_ARRANGEMENTS,
-    documents: INITIAL_DOCUMENTS,
-    notifications: INITIAL_NOTIFICATIONS,
+    activeEventId: '',
+    events: [],
+    categories: [],
+    tasks: [],
+    expenses: [],
+    guests: [],
+    vendors: [],
+    schedule: [],
+    arrangements: [],
+    documents: [],
+    notifications: [],
     isCreateEventModalOpen: false,
     isRunSheetLiveModalOpen: false,
     isAgentChatModalOpen: false,
@@ -349,6 +367,23 @@ export const actions = {
   setActiveEvent(eventId: string) {
     state.activeEventId = eventId;
     persistState();
+    if (typeof authState !== 'undefined' && authState.user) {
+      fetchEventSubcollections(eventId)
+        .then((subData) => {
+          if (subData) {
+            state.categories = subData.categories || [];
+            state.tasks = subData.tasks || [];
+            state.expenses = subData.expenses || [];
+            state.guests = subData.guests || [];
+            state.vendors = subData.vendors || [];
+            state.schedule = subData.schedule || [];
+            state.arrangements = subData.arrangements || [];
+            state.documents = subData.documents || [];
+            persistState();
+          }
+        })
+        .catch((e) => console.warn('Subcollections switch notice:', e));
+    }
   },
 
   toggleMobileMenu() {
@@ -397,6 +432,7 @@ export const actions = {
         task.completedAt = new Date().toISOString();
       }
       persistState();
+      saveTaskDoc(task);
     }
   },
 
@@ -408,11 +444,14 @@ export const actions = {
     };
     state.tasks.unshift(newTask);
     persistState();
+    saveTaskDoc(newTask);
   },
 
   deleteTask(taskId: string) {
+    const eventId = state.activeEventId;
     state.tasks = state.tasks.filter((t) => t.id !== taskId);
     persistState();
+    deleteTaskDoc(eventId, taskId);
   },
 
   // Expense actions
@@ -423,6 +462,7 @@ export const actions = {
     };
     state.expenses.unshift(newExp);
     persistState();
+    saveExpenseDoc(newExp);
   },
 
   updateExpensePayment(expenseId: string, paidAmountMinor: number, status: ExpenseItem['paymentStatus']) {
@@ -431,12 +471,15 @@ export const actions = {
       exp.paidAmountMinor = paidAmountMinor;
       exp.paymentStatus = status;
       persistState();
+      saveExpenseDoc(exp);
     }
   },
 
   deleteExpense(expenseId: string) {
+    const eventId = state.activeEventId;
     state.expenses = state.expenses.filter((e) => e.id !== expenseId);
     persistState();
+    deleteExpenseDoc(eventId, expenseId);
   },
 
   // Guests actions
@@ -447,6 +490,7 @@ export const actions = {
     };
     state.guests.unshift(newGuest);
     persistState();
+    saveGuestDoc(newGuest);
   },
 
   updateGuestRSVP(guestId: string, rsvpStatus: GuestItem['rsvpStatus']) {
@@ -454,12 +498,15 @@ export const actions = {
     if (guest) {
       guest.rsvpStatus = rsvpStatus;
       persistState();
+      saveGuestDoc(guest);
     }
   },
 
   deleteGuest(guestId: string) {
+    const eventId = state.activeEventId;
     state.guests = state.guests.filter((g) => g.id !== guestId);
     persistState();
+    deleteGuestDoc(eventId, guestId);
   },
 
   // Vendors actions
@@ -470,6 +517,7 @@ export const actions = {
     };
     state.vendors.push(newVendor);
     persistState();
+    saveVendorDoc(newVendor);
   },
 
   updateVendorPayment(vendorId: string, advancePaidMinor: number) {
@@ -477,6 +525,7 @@ export const actions = {
     if (v) {
       v.advancePaidMinor = advancePaidMinor;
       persistState();
+      saveVendorDoc(v);
     }
   },
 
@@ -486,6 +535,7 @@ export const actions = {
     if (act) {
       act.status = status;
       persistState();
+      saveScheduleDoc(act);
     }
   },
 
@@ -495,6 +545,7 @@ export const actions = {
       act.delayMinutes = (act.delayMinutes || 0) + additionalMinutes;
       act.status = 'delayed';
       persistState();
+      saveScheduleDoc(act);
     }
   },
 
@@ -506,6 +557,7 @@ export const actions = {
     };
     state.schedule.push(newAct);
     persistState();
+    saveScheduleDoc(newAct);
   },
 
   // Arrangements actions
@@ -514,16 +566,18 @@ export const actions = {
     if (arr) {
       arr.status = status;
       persistState();
+      saveArrangementDoc(arr);
     }
   },
 
   // Create Event Wizard Completion
-  createEvent(eventData: Omit<EventItem, 'id' | 'createdAt' | 'status' | 'ownerId'>) {
+  createEvent(eventData: Omit<EventItem, 'id' | 'createdAt' | 'status' | 'ownerId'>, customOwnerId?: string) {
     const newEventId = 'evt-' + Date.now();
+    const ownerId = customOwnerId || (typeof authState !== 'undefined' && authState.user?.uid) || 'user-1';
     const newEvent: EventItem = {
       ...eventData,
       id: newEventId,
-      ownerId: 'user-1',
+      ownerId,
       status: 'planning',
       createdAt: new Date().toISOString(),
     };
@@ -535,7 +589,107 @@ export const actions = {
     seedDefaultsForEventType(newEventId, eventData.eventType, eventData.plannedBudgetMinor);
 
     persistState();
+    saveEventDoc(newEvent);
     return newEventId;
+  },
+
+  deleteEvent(eventId: string) {
+    state.events = state.events.filter((e) => e.id !== eventId);
+    state.categories = state.categories.filter((c) => c.eventId !== eventId);
+    state.tasks = state.tasks.filter((t) => t.eventId !== eventId);
+    state.expenses = state.expenses.filter((x) => x.eventId !== eventId);
+    state.guests = state.guests.filter((g) => g.eventId !== eventId);
+    state.vendors = state.vendors.filter((v) => v.eventId !== eventId);
+    state.schedule = state.schedule.filter((s) => s.eventId !== eventId);
+    state.arrangements = state.arrangements.filter((a) => a.eventId !== eventId);
+    state.documents = state.documents.filter((d) => d.eventId !== eventId);
+    if (state.activeEventId === eventId) {
+      state.activeEventId = state.events[0]?.id || '';
+    }
+    persistState();
+    deleteEventDoc(eventId);
+  },
+
+  async syncAllToFirestore(userId?: string) {
+    const evt = state.events.find((e) => e.id === state.activeEventId) || state.events[0];
+    if (evt) {
+      const cats = state.categories.filter((c) => c.eventId === evt.id);
+      const tsks = state.tasks.filter((t) => t.eventId === evt.id);
+      const exps = state.expenses.filter((x) => x.eventId === evt.id);
+      const gsts = state.guests.filter((g) => g.eventId === evt.id);
+      const vnds = state.vendors.filter((v) => v.eventId === evt.id);
+      const schs = state.schedule.filter((s) => s.eventId === evt.id);
+      const arrs = state.arrangements.filter((a) => a.eventId === evt.id);
+      const docs = state.documents.filter((d) => d.eventId === evt.id);
+      return await seedCompleteEventToFirestore(
+        evt,
+        cats,
+        tsks,
+        exps,
+        gsts,
+        vnds,
+        schs,
+        arrs,
+        docs,
+        userId
+      );
+    }
+    return false;
+  },
+
+  async loadFromFirestore(userId: string) {
+    try {
+      const events = await fetchUserEvents(userId);
+      if (events && events.length > 0) {
+        state.events = events;
+        if (!events.some((e) => e.id === state.activeEventId)) {
+          state.activeEventId = events[0].id;
+        }
+        const subData = await fetchEventSubcollections(state.activeEventId);
+        if (subData) {
+          state.categories = subData.categories || [];
+          state.tasks = subData.tasks || [];
+          state.expenses = subData.expenses || [];
+          state.guests = subData.guests || [];
+          state.vendors = subData.vendors || [];
+          state.schedule = subData.schedule || [];
+          state.arrangements = subData.arrangements || [];
+          state.documents = subData.documents || [];
+        }
+      } else {
+        state.events = [];
+        state.activeEventId = '';
+        state.categories = [];
+        state.tasks = [];
+        state.expenses = [];
+        state.guests = [];
+        state.vendors = [];
+        state.schedule = [];
+        state.arrangements = [];
+        state.documents = [];
+        state.notifications = [];
+      }
+      persistState();
+    } catch (err) {
+      console.warn('Error loading user data from Firestore:', err);
+    }
+  },
+
+  clearUserData() {
+    state.events = [];
+    state.activeEventId = '';
+    state.categories = [];
+    state.tasks = [];
+    state.expenses = [];
+    state.guests = [];
+    state.vendors = [];
+    state.schedule = [];
+    state.arrangements = [];
+    state.documents = [];
+    state.notifications = [];
+    if (typeof localStorage !== 'undefined' && typeof localStorage.removeItem === 'function') {
+      localStorage.removeItem(STORAGE_KEY);
+    }
   },
 
   // Notifications
@@ -614,3 +768,14 @@ function seedDefaultsForEventType(eventId: string, type: EventType, budgetMinor:
     );
   }
 }
+
+// Hook auth synchronization for Firestore data loading and cleanup
+registerAuthSyncHooks(
+  async (userId: string) => {
+    await actions.loadFromFirestore(userId);
+  },
+  () => {
+    actions.clearUserData();
+  }
+);
+

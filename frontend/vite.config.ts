@@ -5,6 +5,7 @@ import { defineConfig } from 'vitest/config'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [vue()],
+  envPrefix: ['VITE_', 'FIREBASE_'],
   test: {
     environment: 'happy-dom',
     globals: true,

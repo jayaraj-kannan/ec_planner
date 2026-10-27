@@ -292,6 +292,156 @@ function clearChat() {
     },
   ];
 }
+
+function renderTableHtml(headers: string[], rows: string[][]): string {
+  let h = '<div class="a2ui-table-wrap md-table-wrapper"><table class="a2ui-table"><thead><tr>';
+  for (const th of headers) {
+    h += `<th>${th}</th>`;
+  }
+  h += '</tr></thead><tbody>';
+  for (const row of rows) {
+    h += '<tr>';
+    for (const cell of row) {
+      h += `<td>${cell}</td>`;
+    }
+    h += '</tr>';
+  }
+  h += '</tbody></table></div>';
+  return h;
+}
+
+function parseMarkdownTables(text: string): string {
+  const lines = text.split('\n');
+  const result: string[] = [];
+  let inTable = false;
+  let headers: string[] = [];
+  let rows: string[][] = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (line.startsWith('|') && line.endsWith('|')) {
+      const cells = line
+        .split('|')
+        .slice(1, -1)
+        .map((c) => c.trim());
+      if (cells.every((c) => /^[-:\s]+$/.test(c))) {
+        continue;
+      }
+      if (!inTable) {
+        inTable = true;
+        headers = cells;
+      } else {
+        rows.push(cells);
+      }
+    } else {
+      if (inTable) {
+        result.push(renderTableHtml(headers, rows));
+        inTable = false;
+        headers = [];
+        rows = [];
+      }
+      result.push(lines[i]);
+    }
+  }
+
+  if (inTable) {
+    result.push(renderTableHtml(headers, rows));
+  }
+
+  return result.join('\n');
+}
+
+function formatMarkdown(text: string): string {
+  if (!text) return '';
+
+  const textWithTables = parseMarkdownTables(text);
+  let html = textWithTables;
+
+  // Headings
+  html = html.replace(/^### (.*$)/gim, '<h4 class="md-heading-3"><span class="heading-accent"></span>$1</h4>');
+  html = html.replace(/^## (.*$)/gim, '<h3 class="md-heading-2"><span class="heading-accent"></span>$1</h3>');
+  html = html.replace(/^# (.*$)/gim, '<h2 class="md-heading-1"><span class="heading-accent"></span>$1</h2>');
+
+  // Bold & Italic
+  html = html.replace(/\*\*\*(.*?)\*\*\*/gim, '<strong><em>$1</em></strong>');
+  html = html.replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>');
+  html = html.replace(/\*([^*\n]+)\*/gim, '<em>$1</em>');
+
+  // Inline Code
+  html = html.replace(/`([^`\n]+)`/gim, '<code class="md-code">$1</code>');
+
+  // Callouts
+  html = html.replace(/^([💡⚠️⚡⭐ℹ️]\s*.*$)/gim, '<div class="md-callout">$1</div>');
+
+  // Bullet items
+  html = html.replace(/^[-*]\s+(.*$)/gim, '<li class="md-list-item"><span class="bullet-dot">•</span><span>$1</span></li>');
+
+  // Numbered step lists
+  html = html.replace(/^(\d+)\.\s+(.*$)/gim, '<div class="md-step-item"><span class="md-step-num">$1</span><span class="md-step-body">$2</span></div>');
+
+  // Wrap list items
+  html = html.replace(/((?:<li class="md-list-item">.*?<\/li>\s*)+)/gim, '<ul class="md-list">$1</ul>');
+
+  // Spacing
+  html = html.replace(/\n\n+/g, '<div class="md-spacer"></div>');
+
+  return html;
+}
+
+function getFollowUpActions(msg: ChatMessage): string[] {
+  if (msg.role !== 'assistant') return [];
+  const text = (msg.content || '').toLowerCase();
+  const a2uiType = msg.a2uiData?.type;
+
+  if (a2uiType === 'create_event' || text.includes('event created')) {
+    return [
+      '💰 Calculate budget breakdown for this celebration',
+      '📋 Generate milestone checklist tasks',
+      '⏱️ Build day-of run sheet timeline',
+    ];
+  }
+  if (a2uiType === 'calculate_budget_breakdown' || text.includes('budget')) {
+    return [
+      '🤝 Recommend vendors and vetting tips',
+      '📋 Create tasks for high-spend categories',
+      '✏️ Adjust total budget or guest count',
+    ];
+  }
+  if (a2uiType === 'generate_day_of_run_sheet' || text.includes('run sheet') || text.includes('timeline')) {
+    return [
+      '⚡ Add 30-min buffer for catering delay',
+      '🔍 Check event readiness score',
+      '📋 Who is lead for venue coordination?',
+    ];
+  }
+  if (a2uiType === 'analyze_event_readiness' || text.includes('readiness')) {
+    return [
+      '⚠️ How do I resolve critical risks?',
+      '👥 Send reminder to pending RSVPs',
+      '📋 Check overdue milestone tasks',
+    ];
+  }
+  if (a2uiType === 'generate_checklist_tasks' || text.includes('checklist')) {
+    return [
+      '⚡ Prioritize immediate actions first',
+      '💰 Check budget for upcoming tasks',
+      '⏱️ Align tasks with run sheet',
+    ];
+  }
+  if (a2uiType === 'list_events' || text.includes('managed events')) {
+    return [
+      '🎉 Create a new celebration',
+      '🔍 Inspect details of active event',
+      '🎯 Calculate readiness score',
+    ];
+  }
+
+  return [
+    '💰 Show budget breakdown',
+    '⏱️ Draft run sheet schedule',
+    '📋 Suggest key planning tasks',
+  ];
+}
 </script>
 
 <template>
@@ -363,23 +513,44 @@ function clearChat() {
 
           <div class="bubble-wrapper">
             <div class="bubble-content" :class="{ 'a2ui-only-bubble': !!msg.a2uiData }">
-              <!-- Text Markdown Output only shown when NO a2ui card is present -->
-              <div v-if="!msg.a2uiData" class="bubble-text" style="white-space: pre-wrap">{{ msg.content }}</div>
+              <!-- User Message Bubble -->
+              <div v-if="msg.role === 'user'" class="bubble-text" style="white-space: pre-wrap">{{ msg.content }}</div>
 
-              <!-- A2UI Interactive Card Presentation (Shown only as a2ui with direct text as title/description) -->
-              <div v-if="msg.a2uiData" class="a2ui-card">
-                <div class="a2ui-card-header">
-                  <div class="a2ui-card-header-left">
-                    <span class="a2ui-tag">ADK A2UI Card</span>
-                    <h4 class="a2ui-card-title">{{ getCardTitle(msg.a2uiData) }}</h4>
+              <!-- Assistant Message: Rich UI Output Card -->
+              <div v-else class="ai-ui-output-card" :class="{ 'with-a2ui': !!msg.a2uiData }">
+                <!-- AI Agent Meta Bar -->
+                <div class="ai-agent-meta-bar">
+                  <div class="ai-meta-identity">
+                    <div class="ai-pulse-badge">
+                      <Sparkles :size="12" />
+                    </div>
+                    <span class="ai-agent-name">PlanCraft ADK Intelligence</span>
+                    <span class="ai-model-tag">Gemini 2.5</span>
                   </div>
-                  <span class="a2ui-type">{{ msg.a2uiData.type }}</span>
+                  <span class="ai-timestamp">{{ msg.timestamp }}</span>
                 </div>
 
-                <!-- Direct Description Banner (whever required show direct text details as title or description) -->
-                <div v-if="getCardDescription(msg.a2uiData)" class="a2ui-card-description">
-                  {{ getCardDescription(msg.a2uiData) }}
-                </div>
+                <!-- Structured Formatted Output (Headings, Tables, Lists, Steps, Callouts) -->
+                <div
+                  v-if="msg.content"
+                  class="ai-parsed-markdown"
+                  v-html="formatMarkdown(msg.content)"
+                ></div>
+
+                <!-- A2UI Interactive Card Presentation -->
+                <div v-if="msg.a2uiData" class="a2ui-card">
+                  <div class="a2ui-card-header">
+                    <div class="a2ui-card-header-left">
+                      <span class="a2ui-tag">ADK A2UI Card</span>
+                      <h4 class="a2ui-card-title">{{ getCardTitle(msg.a2uiData) }}</h4>
+                    </div>
+                    <span class="a2ui-type">{{ msg.a2uiData.type }}</span>
+                  </div>
+
+                  <!-- Direct Description Banner (whever required show direct text details as title or description) -->
+                  <div v-if="getCardDescription(msg.a2uiData)" class="a2ui-card-description">
+                    {{ getCardDescription(msg.a2uiData) }}
+                  </div>
 
                 <!-- Event Lifecycle Card (Created / Updated / Details) -->
                 <div v-if="msg.a2uiData.type === 'create_event' || msg.a2uiData.type === 'update_event' || msg.a2uiData.type === 'get_event_details'" class="a2ui-body">
@@ -691,10 +862,28 @@ function clearChat() {
                   </div>
                 </div>
               </div>
+
+              <!-- Contextual Quick Follow-Up Actions Row -->
+              <div v-if="getFollowUpActions(msg).length > 0" class="ai-followup-row">
+                <span class="followup-title">⚡ Quick Next Actions:</span>
+                <div class="followup-chips-wrap">
+                  <button
+                    v-for="(act, ai) in getFollowUpActions(msg)"
+                    :key="ai"
+                    class="followup-chip-btn"
+                    @click="selectIntoChat(act)"
+                    :title="'Select: ' + act"
+                  >
+                    <span>{{ act }}</span>
+                    <span class="chip-arrow">↗</span>
+                  </button>
+                </div>
+              </div>
             </div>
-            <span class="bubble-time">{{ msg.timestamp }}</span>
           </div>
+          <span class="bubble-time">{{ msg.timestamp }}</span>
         </div>
+      </div>
 
         <div v-if="isLoading" class="chat-bubble-row assistant">
           <div class="bubble-avatar">
@@ -955,10 +1144,220 @@ function clearChat() {
 }
 
 .assistant .bubble-content.a2ui-only-bubble {
-  padding: 0;
-  background: transparent;
-  border: none;
-  box-shadow: none;
+  padding: 12px 14px;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+}
+
+/* AI UI Output Card */
+.ai-ui-output-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.ai-agent-meta-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(15, 118, 110, 0.12);
+  margin-bottom: 4px;
+}
+
+.ai-meta-identity {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ai-pulse-badge {
+  width: 20px;
+  height: 20px;
+  border-radius: var(--radius-full);
+  background: var(--primary);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ai-agent-name {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.ai-model-tag {
+  font-size: 0.65rem;
+  font-weight: 600;
+  background: #f0fdfa;
+  color: var(--primary);
+  border: 1px solid #ccfbf1;
+  padding: 1px 6px;
+  border-radius: var(--radius-full);
+}
+
+.ai-timestamp {
+  font-size: 0.68rem;
+  color: var(--text-light);
+}
+
+/* Parsed Markdown UI Blocks */
+.ai-parsed-markdown {
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: var(--text-main);
+}
+
+.md-heading-1, .md-heading-2, .md-heading-3 {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  color: var(--text-main);
+  margin: 10px 0 6px 0;
+}
+
+.md-heading-1 {
+  font-size: 1.05rem;
+}
+
+.md-heading-2 {
+  font-size: 0.95rem;
+}
+
+.md-heading-3 {
+  font-size: 0.88rem;
+}
+
+.heading-accent {
+  width: 3px;
+  height: 14px;
+  background: var(--primary);
+  border-radius: var(--radius-full);
+  display: inline-block;
+}
+
+.md-code {
+  font-family: monospace;
+  font-size: 0.82rem;
+  background: var(--surface-subtle);
+  border: 1px solid var(--surface-border);
+  padding: 2px 5px;
+  border-radius: var(--radius-sm);
+  color: var(--primary);
+}
+
+.md-callout {
+  background: #f0fdfa;
+  border-left: 3px solid var(--primary);
+  padding: 8px 12px;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  margin: 8px 0;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.md-list {
+  margin: 6px 0;
+  padding-left: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.md-list-item {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 0.86rem;
+  color: var(--text-main);
+}
+
+.bullet-dot {
+  color: var(--primary);
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.md-step-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface-subtle);
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  margin: 4px 0;
+  font-size: 0.84rem;
+}
+
+.md-step-num {
+  background: var(--primary);
+  color: white;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: var(--radius-full);
+}
+
+.md-spacer {
+  height: 8px;
+}
+
+/* Quick Follow-Up Actions Row */
+.ai-followup-row {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--surface-border);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.followup-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.followup-chips-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.followup-chip-btn {
+  background: #f8fafc;
+  border: 1px solid var(--surface-border);
+  color: var(--text-main);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 5px 10px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.followup-chip-btn:hover {
+  background: #f0fdfa;
+  border-color: var(--primary);
+  color: var(--primary);
+  transform: translateY(-1px);
+}
+
+.chip-arrow {
+  color: var(--primary);
+  font-size: 0.7rem;
 }
 
 .bubble-time {

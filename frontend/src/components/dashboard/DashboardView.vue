@@ -21,6 +21,8 @@ import {
   ArrowRight,
   Sparkles,
   Check,
+  PartyPopper,
+  Plus,
 } from 'lucide-vue-next';
 
 function onToggleTask(taskId: string) {
@@ -30,12 +32,28 @@ function onToggleTask(taskId: string) {
 
 <template>
   <div class="dashboard-wrap">
+    <!-- Empty State for Users with No Events Yet -->
+    <div v-if="!currentEvent" class="card empty-dashboard-state">
+      <div class="empty-icon-box">
+        <PartyPopper :size="36" />
+      </div>
+      <h2>Welcome to PlanCraft!</h2>
+      <p class="empty-subtitle">
+        You don't have any celebrations created yet. Start planning your special wedding, birthday, or corporate celebration with our AI Copilot and live run sheet.
+      </p>
+      <button class="btn btn-primary" style="padding: 10px 20px; font-size: 0.95rem" @click="actions.openCreateEventModal()">
+        <Plus :size="18" />
+        <span>+ Create Your First Celebration</span>
+      </button>
+    </div>
+
     <!-- Top Greeting & Event Hero Banner (Compact & Responsive) -->
+    <template v-else>
     <div class="card hero-banner">
       <div class="hero-left">
         <div class="hero-badges">
           <span class="hero-tag">
-            {{ currentEvent?.eventType.toUpperCase() }}
+            {{ currentEvent.eventType.toUpperCase() }}
           </span>
           <span class="hero-theme">
             {{ currentEvent?.theme || 'Celebration' }}
@@ -369,10 +387,44 @@ function onToggleTask(taskId: string) {
         </div>
       </div>
     </div>
+    </template>
   </div>
 </template>
 
 <style scoped>
+.empty-dashboard-state {
+  text-align: center;
+  padding: 56px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  background: white;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--surface-border);
+  box-shadow: var(--shadow-sm);
+  margin-top: 12px;
+}
+
+.empty-icon-box {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-full);
+  background: #f0fdfa;
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.empty-subtitle {
+  max-width: 480px;
+  color: var(--text-muted);
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
 .dashboard-wrap {
   display: flex;
   flex-direction: column;

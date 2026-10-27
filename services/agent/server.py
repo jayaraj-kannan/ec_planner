@@ -421,13 +421,36 @@ async def chat(req: ChatRequest):
                     "tools": all_tools,
                 },
             )
-            reply_text = response.text or "I have processed your request."
-            parts.append({"kind": "text", "text": reply_text})
+            reply_text = getattr(response, "text", None)
+            function_calls = getattr(response, "function_calls", None)
 
-            # Check if matching tool result can accompany the response as an A2UI card
-            tool_res = execute_matching_tool(req.message, req.event_context)
-            if tool_res:
-                parts.append({"kind": "a2ui", "data": {"type": tool_res["tool"], "payload": tool_res["result"]}})
+            executed_tool = False
+            if function_calls:
+                for fn in function_calls:
+                    fn_name = fn.name
+                    fn_args = dict(fn.args) if fn.args else {}
+                    tool_fn = next((t for t in all_tools if getattr(t, "__name__", "") == fn_name), None)
+                    if tool_fn:
+                        try:
+                            tool_result = tool_fn(**fn_args)
+                            parts.append({"kind": "a2ui", "data": {"type": fn_name, "payload": tool_result}})
+                            executed_tool = True
+                        except Exception as te:
+                            print(f"Tool execution error for {fn_name}: {te}")
+
+            if not executed_tool:
+                tool_res = execute_matching_tool(req.message, req.event_context)
+                if tool_res:
+                    parts.append({"kind": "a2ui", "data": {"type": tool_res["tool"], "payload": tool_res["result"]}})
+
+            if not reply_text:
+                if any(p["kind"] == "a2ui" for p in parts):
+                    t_type = next(p["data"]["type"] for p in parts if p["kind"] == "a2ui")
+                    reply_text = f"Here is the calculated planning guidance for **{t_type.replace('_', ' ').title()}**:"
+                else:
+                    reply_text = "I have processed your celebration planning request."
+
+            parts.insert(0, {"kind": "text", "text": reply_text})
 
         except Exception as e:
             # Fallback to local tool invocation

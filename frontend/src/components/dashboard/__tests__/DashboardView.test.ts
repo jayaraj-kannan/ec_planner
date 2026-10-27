@@ -85,4 +85,16 @@ describe('DashboardView Component Unit Tests', () => {
       expect(state.isRunSheetLiveModalOpen).toBe(true);
     }
   });
+
+  it('renders welcome empty state and opens create modal when no events exist', async () => {
+    state.events = [];
+    state.activeEventId = '';
+    const wrapper = mount(DashboardView);
+    expect(wrapper.find('.empty-dashboard-state').exists()).toBe(true);
+    expect(wrapper.text()).toContain('Welcome to PlanCraft!');
+
+    const createBtn = wrapper.find('.empty-dashboard-state button');
+    await createBtn.trigger('click');
+    expect(state.isCreateEventModalOpen).toBe(true);
+  });
 });

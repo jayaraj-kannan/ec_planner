@@ -405,7 +405,9 @@ describe('EventStore Comprehensive Unit Tests (100% Coverage)', () => {
         scheduleDate: '2026-12-18',
         startTime: '18:00',
         endTime: '18:30',
-        owner: 'Dance Troupe',
+        responsiblePerson: 'Dance Troupe',
+        backupContact: 'John',
+        phone: '1234567890',
         location: 'Main Stage',
         status: 'upcoming',
       });
@@ -443,6 +445,58 @@ describe('EventStore Comprehensive Unit Tests (100% Coverage)', () => {
         actions.markAllNotificationsRead();
         expect(state.notifications.every((n) => n.read)).toBe(true);
       }
+    });
+
+    it('deletes an event and cleans all its associated subcollections', () => {
+      const eid = 'evt-to-delete';
+      state.events.push({
+        id: eid,
+        ownerId: 'u1',
+        name: 'Delete Me Event',
+        eventType: 'birthday',
+        startDate: '2026-12-01',
+        plannedBudgetMinor: 100000,
+        expectedGuestCount: 20,
+        venueName: 'Park',
+        venueAddress: 'Blr',
+        theme: 'Casual',
+        currency: 'INR',
+        timeZone: 'UTC',
+        status: 'planning',
+        createdAt: new Date().toISOString(),
+      });
+      state.categories.push({ id: 'c-del', eventId: eid, name: 'Del', allocatedAmountMinor: 1000 });
+      state.tasks.push({ id: 't-del', eventId: eid, taskName: 'Del Task', category: 'General', assignedTo: 'Me', dueDate: '2026-12-01', priority: 'low', status: 'pending' });
+
+      actions.setActiveEvent(eid);
+      expect(state.activeEventId).toBe(eid);
+
+      actions.deleteEvent(eid);
+      expect(state.events.some((e) => e.id === eid)).toBe(false);
+      expect(state.categories.some((c) => c.eventId === eid)).toBe(false);
+      expect(state.tasks.some((t) => t.eventId === eid)).toBe(false);
+      expect(state.activeEventId).not.toBe(eid);
+    });
+
+    it('clears user data completely when clearUserData is invoked', () => {
+      actions.resetToMockDefaults();
+      expect(state.events.length).toBeGreaterThan(0);
+
+      actions.clearUserData();
+      expect(state.events).toEqual([]);
+      expect(state.activeEventId).toBe('');
+      expect(state.tasks).toEqual([]);
+      expect(state.categories).toEqual([]);
+      expect(state.expenses).toEqual([]);
+      expect(state.guests).toEqual([]);
+    });
+
+    it('loads user data from Firestore or handles empty user events gracefully', async () => {
+      actions.clearUserData();
+      await actions.loadFromFirestore('non-existent-user');
+      expect(state.events).toEqual([]);
+
+      await actions.syncAllToFirestore('user-1');
     });
   });
 });

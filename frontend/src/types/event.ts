@@ -46,6 +46,7 @@ export interface ChecklistTask {
   completedAt?: string;
   notes?: string;
 }
+export type TaskItem = ChecklistTask;
 
 export interface BudgetCategory {
   id: string;
@@ -54,6 +55,7 @@ export interface BudgetCategory {
   allocatedAmountMinor: number;
   notes?: string;
 }
+export type CategoryItem = BudgetCategory;
 
 export type PaymentStatus = 'paid' | 'pending' | 'partial' | 'cancelled';
 

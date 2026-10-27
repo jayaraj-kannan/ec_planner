@@ -115,12 +115,15 @@ describe('Schedule Components Unit Tests (ScheduleView & RunSheetLiveModal)', ()
         id: 'sch-delayed',
         eventId: state.activeEventId,
         activityName: 'Delayed Baraat Entrance',
+        scheduleDate: '2026-12-18',
         startTime: '19:00',
         endTime: '20:00',
-        status: 'pending',
+        status: 'upcoming',
         delayMinutes: 20,
         location: 'North Gate',
         responsiblePerson: 'Lead',
+        backupContact: 'Co-Lead',
+        phone: '9876543210',
       });
       const wrapper = mount(ScheduleView);
       expect(wrapper.text()).toContain('Delayed Baraat Entrance');

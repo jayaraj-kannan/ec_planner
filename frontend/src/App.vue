@@ -7,6 +7,7 @@ import {
 import Sidebar from './components/layout/Sidebar.vue';
 import Navbar from './components/layout/Navbar.vue';
 import DashboardView from './components/dashboard/DashboardView.vue';
+import HomeGuestDashboardView from './components/dashboard/HomeGuestDashboardView.vue';
 import EventsListView from './components/events/EventsListView.vue';
 import ChecklistView from './components/checklist/ChecklistView.vue';
 import BudgetView from './components/budget/BudgetView.vue';
@@ -19,97 +20,127 @@ import SettingsView from './components/settings/SettingsView.vue';
 import CreateEventModal from './components/events/CreateEventModal.vue';
 import RunSheetLiveModal from './components/schedule/RunSheetLiveModal.vue';
 import AgentChatModal from './components/agent/AgentChatModal.vue';
+import AuthModal from './components/auth/AuthModal.vue';
+import { authState, authActions } from './stores/authStore';
 import {
   LayoutDashboard,
   CalendarDays,
   CheckSquare,
   Wallet,
   MoreHorizontal,
+  Sparkles,
+  LogIn,
 } from 'lucide-vue-next';
 </script>
 
 <template>
   <div class="app-container">
-    <!-- Desktop & Tablet Sidebar / Mobile Drawer -->
-    <Sidebar />
+    <!-- Desktop & Tablet Sidebar / Mobile Drawer (Visible when signed in) -->
+    <Sidebar v-if="authState.user" />
 
     <!-- Main Content Wrapper -->
-    <div class="main-wrapper">
+    <div class="main-wrapper" :class="{ 'guest-main-wrapper': !authState.user }">
       <!-- Top Sticky Navigation Bar -->
       <Navbar />
 
       <!-- Active Content View Area -->
       <main class="content-body">
-        <DashboardView v-if="state.activeTab === 'dashboard'" />
-        <EventsListView v-else-if="state.activeTab === 'events'" />
-        <ChecklistView v-else-if="state.activeTab === 'checklist'" />
-        <BudgetView v-else-if="state.activeTab === 'budget'" />
-        <GuestsView v-else-if="state.activeTab === 'guests'" />
-        <VendorsView v-else-if="state.activeTab === 'vendors'" />
-        <ScheduleView v-else-if="state.activeTab === 'schedule'" />
-        <ArrangementsView v-else-if="state.activeTab === 'arrangements'" />
-        <DocumentsView v-else-if="state.activeTab === 'documents'" />
-        <SettingsView v-else-if="state.activeTab === 'settings'" />
+        <!-- Unauthenticated Guest Showcase Dashboard -->
+        <HomeGuestDashboardView v-if="!authState.user" />
+
+        <!-- Authenticated Operational Event Tabs -->
+        <template v-else>
+          <DashboardView v-if="state.activeTab === 'dashboard'" />
+          <EventsListView v-else-if="state.activeTab === 'events'" />
+          <ChecklistView v-else-if="state.activeTab === 'checklist'" />
+          <BudgetView v-else-if="state.activeTab === 'budget'" />
+          <GuestsView v-else-if="state.activeTab === 'guests'" />
+          <VendorsView v-else-if="state.activeTab === 'vendors'" />
+          <ScheduleView v-else-if="state.activeTab === 'schedule'" />
+          <ArrangementsView v-else-if="state.activeTab === 'arrangements'" />
+          <DocumentsView v-else-if="state.activeTab === 'documents'" />
+          <SettingsView v-else-if="state.activeTab === 'settings'" />
+        </template>
       </main>
 
       <!-- Mobile Bottom Navigation Bar (Visible only on screens <= 768px) -->
       <nav class="mobile-bottom-nav">
-        <button
-          class="bottom-nav-btn"
-          :class="{ active: state.activeTab === 'dashboard' }"
-          @click="actions.setActiveTab('dashboard')"
-        >
-          <LayoutDashboard :size="18" />
-          <span>Home</span>
-        </button>
+        <template v-if="!authState.user">
+          <button
+            class="bottom-nav-btn active"
+            @click="actions.setActiveTab('dashboard')"
+          >
+            <LayoutDashboard :size="18" />
+            <span>Home</span>
+          </button>
 
-        <button
-          class="bottom-nav-btn"
-          :class="{ active: state.activeTab === 'events' }"
-          @click="actions.setActiveTab('events')"
-        >
-          <CalendarDays :size="18" />
-          <span>Events</span>
-        </button>
+          <button
+            class="bottom-nav-btn"
+            @click="authActions.openAuthModal('signin')"
+          >
+            <LogIn :size="18" />
+            <span>Sign In</span>
+          </button>
+        </template>
 
-        <button
-          class="bottom-nav-btn"
-          :class="{ active: state.activeTab === 'checklist' }"
-          @click="actions.setActiveTab('checklist')"
-          style="position: relative"
-        >
-          <CheckSquare :size="18" />
-          <span>Tasks</span>
-          <span
-            v-if="taskMetrics.overdue > 0"
-            style="
-              position: absolute;
-              top: 4px;
-              right: 18px;
-              width: 7px;
-              height: 7px;
-              border-radius: 50%;
-              background: var(--danger);
-            "
-          ></span>
-        </button>
+        <template v-else>
+          <button
+            class="bottom-nav-btn"
+            :class="{ active: state.activeTab === 'dashboard' }"
+            @click="actions.setActiveTab('dashboard')"
+          >
+            <LayoutDashboard :size="18" />
+            <span>Home</span>
+          </button>
 
-        <button
-          class="bottom-nav-btn"
-          :class="{ active: state.activeTab === 'budget' }"
-          @click="actions.setActiveTab('budget')"
-        >
-          <Wallet :size="18" />
-          <span>Budget</span>
-        </button>
+          <button
+            class="bottom-nav-btn"
+            :class="{ active: state.activeTab === 'events' }"
+            @click="actions.setActiveTab('events')"
+          >
+            <CalendarDays :size="18" />
+            <span>Events</span>
+          </button>
 
-        <button
-          class="bottom-nav-btn"
-          @click="actions.toggleMobileMenu()"
-        >
-          <MoreHorizontal :size="18" />
-          <span>More</span>
-        </button>
+          <button
+            class="bottom-nav-btn"
+            :class="{ active: state.activeTab === 'checklist' }"
+            @click="actions.setActiveTab('checklist')"
+            style="position: relative"
+          >
+            <CheckSquare :size="18" />
+            <span>Tasks</span>
+            <span
+              v-if="taskMetrics.overdue > 0"
+              style="
+                position: absolute;
+                top: 4px;
+                right: 18px;
+                width: 7px;
+                height: 7px;
+                border-radius: 50%;
+                background: var(--danger);
+              "
+            ></span>
+          </button>
+
+          <button
+            class="bottom-nav-btn"
+            :class="{ active: state.activeTab === 'budget' }"
+            @click="actions.setActiveTab('budget')"
+          >
+            <Wallet :size="18" />
+            <span>Budget</span>
+          </button>
+
+          <button
+            class="bottom-nav-btn"
+            @click="actions.toggleMobileMenu()"
+          >
+            <MoreHorizontal :size="18" />
+            <span>More</span>
+          </button>
+        </template>
       </nav>
     </div>
 
@@ -117,6 +148,7 @@ import {
     <CreateEventModal v-if="state.isCreateEventModalOpen" />
     <RunSheetLiveModal v-if="state.isRunSheetLiveModalOpen" />
     <AgentChatModal />
+    <AuthModal />
   </div>
 </template>
 

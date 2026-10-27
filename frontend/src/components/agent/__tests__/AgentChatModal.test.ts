@@ -496,4 +496,80 @@ describe('AgentChatModal Component Unit Tests (Comprehensive Coverage)', () => {
 
     expect(wrapper.text()).toContain('Could not reach ADK Agent Service');
   });
+
+  it('renders rich markdown UI output elements and handles follow-up quick chips', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockImplementation((url: string) => {
+        if (url.endsWith('/health')) {
+          return Promise.resolve({ ok: true, status: 200, json: async () => ({}) });
+        }
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          json: async () => ({
+            parts: [
+              {
+                kind: 'text',
+                text: '### Strategic Event Brief\n\n| Item | Allocation |\n| :--- | :--- |\n| Catering | $4,500 |\n\n- [ ] Reserve keynote audio\n1. Confirm venue deposit\n\n💡 Pro tip: Finalize permits 30 days prior to event.',
+              },
+            ],
+          }),
+        });
+      })
+    );
+
+    const wrapper = mount(AgentChatModal);
+    const input = wrapper.find('.agent-input');
+    await input.setValue('Give me an event plan');
+    await wrapper.find('form.agent-input-form').trigger('submit');
+    await flushPromises();
+
+    // Verify rich UI output elements rendered
+    expect(wrapper.find('.ai-ui-output-card').exists()).toBe(true);
+    expect(wrapper.find('.ai-agent-meta-bar').exists()).toBe(true);
+    expect(wrapper.find('.md-heading-3').exists()).toBe(true);
+    expect(wrapper.find('.md-table-wrapper').exists()).toBe(true);
+    expect(wrapper.find('.a2ui-table').exists()).toBe(true);
+    expect(wrapper.find('.md-callout').exists()).toBe(true);
+    expect(wrapper.find('.md-list-item').exists()).toBe(true);
+    expect(wrapper.find('.md-step-item').exists()).toBe(true);
+
+    // Verify follow-up action chips are present and clickable
+    const followupChips = wrapper.findAll('.followup-chip-btn');
+    expect(followupChips.length).toBeGreaterThan(0);
+    await followupChips[0].trigger('click');
+    await wrapper.vm.$nextTick();
+
+    const inputEl = wrapper.find('.agent-input').element as HTMLInputElement;
+    expect(inputEl.value.length).toBeGreaterThan(0);
+
+    // Also verify when table terminates directly at end of message (covers trailing table flush)
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockImplementation((url: string) => {
+        if (url.endsWith('/health')) {
+          return Promise.resolve({ ok: true, status: 200, json: async () => ({}) });
+        }
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          json: async () => ({
+            parts: [
+              {
+                kind: 'text',
+                text: '| Col A | Col B |\n| --- | --- |\n| Val 1 | Val 2 |',
+              },
+            ],
+          }),
+        });
+      })
+    );
+
+    await input.setValue('Show standalone table');
+    await wrapper.find('form.agent-input-form').trigger('submit');
+    await flushPromises();
+
+    expect(wrapper.text()).toContain('Val 1');
+  });
 });

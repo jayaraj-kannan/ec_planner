@@ -20,7 +20,11 @@ import {
   Sparkles,
   PartyPopper,
   X,
+  LogIn,
+  LogOut,
+  User,
 } from 'lucide-vue-next';
+import { authState, authActions } from '../../stores/authStore';
 
 interface NavItem {
   id: ActiveTab;
@@ -49,6 +53,10 @@ const navItems = computed<NavItem[]>(() => [
 ]);
 
 function setTab(tab: ActiveTab) {
+  if (!authState.user && tab !== 'dashboard') {
+    authActions.openAuthModal('signin');
+    return;
+  }
   actions.setActiveTab(tab);
 }
 </script>
@@ -105,8 +113,8 @@ function setTab(tab: ActiveTab) {
       </button>
     </nav>
 
-    <!-- AI Assistant CTA in Sidebar -->
-    <div style="padding: 6px 12px 0 12px">
+    <!-- AI Assistant CTA in Sidebar (only when signed in) -->
+    <div v-if="authState.user" style="padding: 6px 12px 0 12px">
       <button
         class="btn"
         style="width: 100%; font-size: 0.8rem; padding: 8px 10px; background: #f0fdfa; color: var(--primary); border: 1px solid #ccfbf1; font-weight: 600"
@@ -117,8 +125,8 @@ function setTab(tab: ActiveTab) {
       </button>
     </div>
 
-    <!-- Create Event CTA in Sidebar -->
-    <div style="padding: 8px 12px 10px 12px">
+    <!-- Create Event CTA in Sidebar (only when signed in) -->
+    <div v-if="authState.user" style="padding: 8px 12px 10px 12px">
       <button
         class="btn btn-primary"
         style="width: 100%; font-size: 0.8rem; padding: 8px 10px;"
@@ -129,18 +137,46 @@ function setTab(tab: ActiveTab) {
       </button>
     </div>
 
-    <!-- Sidebar Footer / User Profile -->
+    <!-- Sidebar Footer / User Profile & Auth -->
     <div class="sidebar-footer">
-      <div class="user-profile-card">
-        <div class="avatar">JK</div>
+      <div v-if="authState.user" class="user-profile-card">
+        <img
+          v-if="authState.user.photoURL"
+          :src="authState.user.photoURL"
+          alt="Avatar"
+          class="avatar"
+          style="object-fit: cover"
+        />
+        <div v-else class="avatar">
+          {{ (authState.profile?.displayName || authState.user.email || 'U').slice(0, 2).toUpperCase() }}
+        </div>
         <div style="flex: 1; overflow: hidden">
           <div style="font-weight: 600; font-size: 0.8rem; color: var(--text-main); white-space: nowrap; text-overflow: ellipsis; overflow: hidden">
-            Jayaraj Kannan
+            {{ authState.profile?.displayName || authState.user.displayName || authState.user.email?.split('@')[0] }}
           </div>
-          <div style="font-size: 0.68rem; color: var(--text-muted)">
-            Event Host
+          <div style="font-size: 0.68rem; color: var(--text-muted); white-space: nowrap; text-overflow: ellipsis; overflow: hidden">
+            {{ authState.user.email }}
           </div>
         </div>
+        <button
+          class="btn btn-ghost"
+          style="padding: 4px; color: var(--text-muted)"
+          title="Sign Out"
+          @click="authActions.logout()"
+        >
+          <LogOut :size="14" />
+        </button>
+      </div>
+
+      <div v-else style="padding: 4px">
+        <button
+          class="btn btn-secondary"
+          style="width: 100%; font-size: 0.78rem; padding: 7px 10px; justify-content: center"
+          @click="authActions.openAuthModal('signin')"
+        >
+          <LogIn :size="14" />
+          <span>Sign In / Register</span>
+        </button>
       </div>
     </div>
   </aside>
@@ -204,7 +240,7 @@ function setTab(tab: ActiveTab) {
         </button>
       </nav>
 
-      <div style="padding: 12px 14px; border-top: 1px solid var(--surface-border)">
+      <div v-if="authState.user" style="padding: 12px 14px; border-top: 1px solid var(--surface-border)">
         <button
           class="btn btn-primary"
           style="width: 100%; font-size: 0.85rem; padding: 10px"

@@ -5,6 +5,7 @@ import {
   actions,
   readinessMetrics,
 } from '../../stores/eventStore';
+import { authState, authActions } from '../../stores/authStore';
 import {
   Calendar,
   Bell,
@@ -13,6 +14,9 @@ import {
   ChevronDown,
   Menu,
   Sparkles,
+  LogIn,
+  LogOut,
+  PartyPopper,
 } from 'lucide-vue-next';
 
 const isNotifOpen = ref(false);
@@ -36,74 +40,100 @@ function onSelectEvent(e: Event) {
 <template>
   <header class="top-navbar">
     <div class="navbar-left">
-      <!-- Mobile Drawer Hamburger Toggle Button -->
-      <button
-        class="btn-icon mobile-menu-btn"
-        @click="actions.toggleMobileMenu()"
-        aria-label="Open Navigation Menu"
-      >
-        <Menu :size="20" />
-      </button>
-
-      <!-- Event Switcher Dropdown -->
-      <div class="event-selector-box">
-        <Calendar :size="16" style="color: var(--primary); flex-shrink: 0" />
-        <select
-          class="event-select-dropdown"
-          :value="state.activeEventId"
-          @change="onSelectEvent"
-        >
-          <option
-            v-for="evt in state.events"
-            :key="evt.id"
-            :value="evt.id"
-          >
-            {{ evt.name }} ({{ evt.eventType.toUpperCase() }})
-          </option>
-        </select>
-        <ChevronDown :size="12" style="color: var(--text-muted); flex-shrink: 0" />
+      <!-- Unauthenticated: Brand Header -->
+      <div v-if="!authState.user" class="guest-nav-brand">
+        <div class="logo-badge">
+          <PartyPopper :size="18" />
+        </div>
+        <div class="logo-text">
+          <span class="logo-title">PlanCraft</span>
+          <span class="logo-subtitle">Event Planning OS</span>
+        </div>
       </div>
 
-      <!-- Quick Countdown Badge (compact on mobile) -->
-      <span class="badge badge-info nav-countdown-badge" style="font-weight: 700">
-        ⏳ {{ readinessMetrics.daysUntil }}d
-        <span class="countdown-label-full">to go</span>
-      </span>
+      <!-- Authenticated: Switcher and Countdown -->
+      <template v-else>
+        <!-- Mobile Drawer Hamburger Toggle Button -->
+        <button
+          class="btn-icon mobile-menu-btn"
+          @click="actions.toggleMobileMenu()"
+          aria-label="Open Navigation Menu"
+        >
+          <Menu :size="20" />
+        </button>
+
+        <!-- Event Switcher Dropdown -->
+        <div class="event-selector-box">
+          <Calendar :size="16" style="color: var(--primary); flex-shrink: 0" />
+          <select
+            class="event-select-dropdown"
+            :value="state.activeEventId"
+            @change="onSelectEvent"
+          >
+            <option
+              v-for="evt in state.events"
+              :key="evt.id"
+              :value="evt.id"
+            >
+              {{ evt.name }} ({{ evt.eventType.toUpperCase() }})
+            </option>
+          </select>
+          <ChevronDown :size="12" style="color: var(--text-muted); flex-shrink: 0" />
+        </div>
+
+        <!-- Quick Countdown Badge (compact on mobile) -->
+        <span class="badge badge-info nav-countdown-badge" style="font-weight: 700">
+          ⏳ {{ readinessMetrics.daysUntil }}d
+          <span class="countdown-label-full">to go</span>
+        </span>
+      </template>
     </div>
 
     <div class="navbar-right">
-      <!-- Live Run Sheet Trigger -->
-      <button
-        class="btn btn-outline btn-sm nav-btn-compact"
-        @click="actions.openRunSheetLiveModal()"
-        title="Open Live Event-Day Run Sheet"
-      >
-        <PlayCircle :size="14" />
-        <span class="btn-text-responsive">Run Sheet</span>
-      </button>
+      <!-- Authenticated Private Action Buttons & Notification Center -->
+      <template v-if="authState.user">
+        <!-- Live Run Sheet Trigger -->
+        <button
+          class="btn btn-outline btn-sm nav-btn-compact"
+          @click="actions.openRunSheetLiveModal()"
+          title="Open Live Event-Day Run Sheet"
+        >
+          <PlayCircle :size="14" />
+          <span class="btn-text-responsive">Run Sheet</span>
+        </button>
 
-      <!-- AI Assistant Button -->
-      <button
-        class="btn btn-sm nav-btn-compact"
-        style="background: linear-gradient(135deg, #0f766e 0%, #0d9488 100%); color: white; border: none; font-weight: 600"
-        @click="actions.openAgentChatModal()"
-        title="Open PlanCraft ADK AI Assistant"
-      >
-        <Sparkles :size="14" />
-        <span class="btn-text-responsive">AI Copilot</span>
-      </button>
+        <!-- AI Assistant Button -->
+        <button
+          class="btn btn-sm nav-btn-compact"
+          style="background: linear-gradient(135deg, #0f766e 0%, #0d9488 100%); color: white; border: none; font-weight: 600"
+          @click="actions.openAgentChatModal()"
+          title="Open PlanCraft ADK AI Assistant"
+        >
+          <Sparkles :size="14" />
+          <span class="btn-text-responsive">AI Copilot</span>
+        </button>
 
-      <!-- New Event Button -->
-      <button
-        class="btn btn-primary btn-sm nav-btn-compact"
-        @click="actions.openCreateEventModal()"
-      >
-        <Plus :size="14" />
-        <span class="btn-text-responsive">Create</span>
-      </button>
+        <!-- New Event Button -->
+        <button
+          class="btn btn-primary btn-sm nav-btn-compact"
+          @click="actions.openCreateEventModal()"
+        >
+          <Plus :size="14" />
+          <span class="btn-text-responsive">Create</span>
+        </button>
 
-      <!-- Notification Center Popover -->
-      <div style="position: relative">
+        <!-- User Profile / Auth Button -->
+        <div class="nav-user-chip">
+          <img v-if="authState.profile?.photoURL" :src="authState.profile.photoURL" class="nav-avatar-img" alt="avatar" />
+          <div v-else class="nav-avatar-fallback">{{ (authState.profile?.displayName || 'Host').slice(0, 2).toUpperCase() }}</div>
+          <span class="nav-user-name btn-text-responsive">{{ authState.profile?.displayName || authState.user.email?.split('@')[0] }}</span>
+          <button class="btn-icon btn-logout" @click="authActions.logout()" title="Sign Out">
+            <LogOut :size="13" />
+          </button>
+        </div>
+
+        <!-- Notification Center Popover -->
+        <div style="position: relative">
         <button
           class="btn-icon"
           @click="toggleNotif"
@@ -196,13 +226,82 @@ function onSelectEvent(e: Event) {
           </div>
         </div>
       </div>
+      </template>
+
+      <!-- Guest Sign In Button (Only option when not signed in) -->
+      <button
+        v-else
+        class="btn btn-primary btn-sm nav-btn-compact btn-signin"
+        @click="authActions.openAuthModal('signin')"
+        title="Sign in with Google or Email"
+      >
+        <LogIn :size="14" />
+        <span class="btn-text-responsive">Sign In</span>
+      </button>
     </div>
   </header>
 </template>
 
 <style scoped>
+.guest-nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .mobile-menu-btn {
   display: none;
+}
+
+.nav-user-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--surface-subtle);
+  border: 1px solid var(--surface-border);
+  padding: 3px 6px 3px 4px;
+  border-radius: var(--radius-full);
+}
+
+.nav-avatar-img {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.nav-avatar-fallback {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: white;
+  font-size: 0.65rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nav-user-name {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-main);
+  max-width: 100px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.btn-logout {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  color: var(--text-muted);
+}
+
+.btn-logout:hover {
+  color: var(--danger);
 }
 
 @media (max-width: 768px) {
