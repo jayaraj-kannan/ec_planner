@@ -62,3 +62,45 @@ class TestAgentConfiguration:
         adk_inst = MockADKAgent(**agent_kwargs)
         assert adk_inst.kwargs["name"] == ag.AGENT_NAME
         assert len(adk_inst.kwargs["tools"]) == 10
+
+    def test_adk_instruction_contains_event_creation_requirements(self):
+        assert "MANDATORY INFORMATION GATHERING" in AGENT_INSTRUCTION
+        assert "Planned Budget" in AGENT_INSTRUCTION
+        assert "Guest List / Headcount" in AGENT_INSTRUCTION
+        assert "Food & Catering Needs" in AGENT_INSTRUCTION
+        assert "CREATING THE EVENT WITH CHECKLIST" in AGENT_INSTRUCTION
+
+    def test_create_event_tool_generates_and_bundles_checklist(self):
+        from app.tools.event_management_tools import create_event
+        res = create_event(
+            name="Rohit & Neha Wedding",
+            event_type="wedding",
+            start_date="2026-12-25",
+            planned_budget=25000.0,
+            expected_guest_count=180,
+            venue_name="Grand Palace",
+            special_instructions="Catering required: Vegetarian buffet with mocktail bar",
+        )
+        assert res["status"] == "success"
+        assert res["event"]["name"] == "Rohit & Neha Wedding"
+        assert "checklist" in res
+        assert "milestone_phases" in res["checklist"]
+        assert len(res["checklist"]["milestone_phases"]) > 0
+
+    def test_execute_matching_tool_inquiry_and_creation_flow(self):
+        from server import execute_matching_tool
+
+        # 1. Asking to create event without required details triggers questionnaire
+        inquiry_res = execute_matching_tool("I want to create an event")
+        assert inquiry_res is not None
+        assert inquiry_res["tool"] == "inquiry_event_details"
+        assert "Estimated Budget" in inquiry_res["result"]["message"]
+        assert "Food & Catering Needs" in inquiry_res["result"]["message"]
+
+        # 2. Providing details creates event with checklist
+        full_res = execute_matching_tool("Create wedding budget $20000 with 150 guests on 2026-11-20 and food needed")
+        assert full_res is not None
+        assert full_res["tool"] == "create_event"
+        assert full_res["result"]["event"]["planned_budget"] == 20000.0
+        assert full_res["result"]["event"]["expected_guest_count"] == 150
+        assert "checklist" in full_res["result"]

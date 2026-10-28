@@ -170,11 +170,21 @@ def create_event(
     conn.close()
 
     event_data = row_to_dict(row)
+    
+    # Generate tailored checklist for the newly created event
+    try:
+        from .event_tools import generate_checklist_tasks
+        days_until = event_data.get("days_until", 90)
+        checklist_data = generate_checklist_tasks(event_type=event_type, days_until_event=days_until)
+    except Exception as ce:
+        checklist_data = {"event_type": event_type, "milestone_phases": []}
+
     return {
         "status": "success",
         "action": "created",
         "message": f"Successfully created event '{name}' (ID: {event_id}) scheduled for {start_date}.",
         "event": event_data,
+        "checklist": checklist_data,
     }
 
 

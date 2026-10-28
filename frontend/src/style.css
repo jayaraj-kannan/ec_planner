@@ -401,6 +401,29 @@ input, select, textarea {
   background-color: var(--primary-light);
 }
 
+.btn-danger {
+  background-color: var(--danger);
+  color: white;
+  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);
+}
+
+.btn-danger:hover {
+  background-color: #DC2626;
+  box-shadow: 0 4px 10px rgba(239, 68, 68, 0.35);
+  transform: translateY(-1px);
+}
+
+.btn-outline-danger {
+  border: 1px solid var(--danger-border);
+  color: var(--danger);
+  background: transparent;
+}
+
+.btn-outline-danger:hover {
+  background-color: var(--danger-bg);
+  border-color: var(--danger);
+}
+
 .btn-sm {
   padding: 5px 10px;
   font-size: 0.78rem;

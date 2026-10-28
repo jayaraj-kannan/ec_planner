@@ -94,7 +94,7 @@ function handleCreate() {
 </script>
 
 <template>
-  <div class="modal-overlay" @click.self="actions.closeCreateEventModal()">
+  <div class="modal-overlay">
     <div class="modal-box large">
       <!-- Modal Header -->
       <div class="modal-header">
@@ -435,15 +435,23 @@ function handleCreate() {
       </div>
 
       <!-- Modal Footer Navigation -->
-      <div class="modal-footer">
+      <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center">
         <button
-          v-if="currentStep > 1"
+          v-if="currentStep === 1"
+          class="btn btn-secondary btn-cancel-create"
+          @click="actions.closeCreateEventModal()"
+        >
+          Cancel
+        </button>
+        <button
+          v-else-if="currentStep > 1"
           class="btn btn-secondary"
           @click="prevStep"
         >
           <ArrowLeft :size="16" />
           <span>Back</span>
         </button>
+        <div v-else></div>
 
         <button
           v-if="currentStep < 5"

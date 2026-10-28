@@ -140,18 +140,52 @@ def execute_matching_tool(message: str, event_ctx: Optional[dict[str, Any]] = No
     ctx = event_ctx or {}
 
     # Event creation matching
-    if any(k in msg for k in ["create event", "create a event", "create an event", "schedule event", "new celebration"]):
-        etype = "wedding" if "wedding" in msg else ("birthday" if "birthday" in msg else "celebration")
-        name = "New Celebration Event"
-        budget = 10000.0
+    if any(k in msg for k in ["create event", "create a event", "create an event", "schedule event", "new celebration", "plan an event", "plan my event", "create my event"]):
+        has_budget = any(w in msg for w in ["$", "budget", "cost", "dollar", "inr", "rs", "₹"]) or any(token.replace("$", "").replace(",", "").isdigit() and int(token.replace("$", "").replace(",", "")) > 500 for token in message.split())
+        has_date = any(char.isdigit() for char in msg) and any(w in msg for w in ["2026", "2027", "jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec", "-", "/"])
+        has_guests = any(w in msg for w in ["guest", "attendee", "people", "pax"])
+
+        if not (has_budget or has_date or has_guests):
+            questionnaire = (
+                "### 🎉 I would love to help you plan and create your celebration!\n\n"
+                "To personalize your event and generate a tailored launch checklist, please share a few required details:\n\n"
+                "1. **📌 Event Name & Type:** (e.g., Wedding, 1st Birthday, 25th Anniversary, Reception, Corporate Summit)\n"
+                "2. **📅 Date & Venue/Location:** (Desired date or timeframe, plus location or city)\n"
+                "3. **💰 Estimated Budget:** (Total budget limit and currency, e.g. `$15,000` or `₹10,00,000`)\n"
+                "4. **👥 Expected Guest Count:** (How many guests are you expecting?)\n"
+                "5. **🍽️ Food & Catering Needs:** (Is catering required? E.g., buffet, plated 3-course dinner, cocktail bar, dietary preferences?)\n"
+                "6. **🎨 Theme or Special Notes:** (Any preferred aesthetic, color theme, or special instructions?)\n\n"
+                "Once you provide these details, I'll initialize your celebration in the planner and automatically build your launch checklist! 🚀"
+            )
+            return {"tool": "inquiry_event_details", "result": {"message": questionnaire, "type": "event_creation_inquiry"}}
+
+        etype = "wedding" if "wedding" in msg else ("birthday" if "birthday" in msg else ("anniversary" if "anniversary" in msg else ("reception" if "reception" in msg else "celebration")))
+        name = f"Grand {etype.title()} Celebration"
+        budget = 15000.0
         date = "2026-12-15"
+        guests = 100
+        food_status = "Catering required: Full meal & beverage service" if any(w in msg for w in ["food", "cater", "lunch", "dinner", "buffet", "meal", "bar", "yes"]) else "Catering: To be determined"
+        special_instructions = f"{food_status}."
+
         for token in message.split():
             clean_token = token.replace("$", "").replace(",", "")
-            if clean_token.isdigit() and int(clean_token) > 500:
-                budget = float(clean_token)
+            if clean_token.isdigit():
+                val = int(clean_token)
+                if val >= 500:
+                    budget = float(val)
+                elif val < 500 and val > 5:
+                    guests = val
             if "-" in token and len(token) == 10 and token[:4].isdigit():
                 date = token
-        res = create_event(name=name, event_type=etype, start_date=date, planned_budget=budget, expected_guest_count=100)
+
+        res = create_event(
+            name=name,
+            event_type=etype,
+            start_date=date,
+            planned_budget=budget,
+            expected_guest_count=guests,
+            special_instructions=special_instructions,
+        )
         return {"tool": "create_event", "result": res}
 
     # Event update matching
@@ -169,6 +203,37 @@ def execute_matching_tool(message: str, event_ctx: Optional[dict[str, Any]] = No
                     guests = val
         res = update_event(event_id=eid, planned_budget=budget, expected_guest_count=guests)
         return {"tool": "update_event", "result": res}
+
+    # Follow-up event details matching (when user replies with budget, guests, food, or date)
+    if ("budget" in msg or "$" in msg or "₹" in msg) and ("guest" in msg or "attendee" in msg or "food" in msg or "cater" in msg) and not any(k in msg for k in ["update", "modify", "calculate"]):
+        etype = "wedding" if "wedding" in msg else ("birthday" if "birthday" in msg else ("anniversary" if "anniversary" in msg else "celebration"))
+        name = f"Grand {etype.title()} Celebration"
+        budget = 15000.0
+        date = "2026-12-15"
+        guests = 100
+        food_status = "Catering required: Full meal & beverage service" if any(w in msg for w in ["food", "cater", "lunch", "dinner", "buffet", "meal", "bar", "yes"]) else "Catering: To be determined"
+        special_instructions = f"{food_status}."
+
+        for token in message.split():
+            clean_token = token.replace("$", "").replace(",", "")
+            if clean_token.isdigit():
+                val = int(clean_token)
+                if val >= 500:
+                    budget = float(val)
+                elif val < 500 and val > 5:
+                    guests = val
+            if "-" in token and len(token) == 10 and token[:4].isdigit():
+                date = token
+
+        res = create_event(
+            name=name,
+            event_type=etype,
+            start_date=date,
+            planned_budget=budget,
+            expected_guest_count=guests,
+            special_instructions=special_instructions,
+        )
+        return {"tool": "create_event", "result": res}
 
     # Event listing matching
     if any(k in msg for k in ["list events", "show events", "my events", "all events", "list the events", "view events", "listed result", "list all events", "show all events", "events list"]):
@@ -413,9 +478,32 @@ async def chat(req: ChatRequest):
             from google import genai
 
             client = genai.Client(api_key=api_key)
+
+            # Build multi-turn conversational history for the session
+            conn_hist = sqlite3.connect(DB_FILE)
+            c_hist = conn_hist.cursor()
+            c_hist.execute(
+                "SELECT role, content FROM messages WHERE session_id = ? ORDER BY id ASC LIMIT 16",
+                (session_id,),
+            )
+            rows = c_hist.fetchall()
+            conn_hist.close()
+
+            chat_contents = []
+            for r_role, r_content in rows:
+                g_role = "user" if r_role == "user" else "model"
+                chat_contents.append(
+                    genai.types.Content(
+                        role=g_role,
+                        parts=[genai.types.Part.from_text(text=r_content)],
+                    )
+                )
+            if not chat_contents:
+                chat_contents = [req.message]
+
             response = client.models.generate_content(
                 model=DEFAULT_MODEL,
-                contents=req.message,
+                contents=chat_contents,
                 config={
                     "system_instruction": AGENT_INSTRUCTION,
                     "tools": all_tools,
@@ -441,7 +529,10 @@ async def chat(req: ChatRequest):
             if not executed_tool:
                 tool_res = execute_matching_tool(req.message, req.event_context)
                 if tool_res:
-                    parts.append({"kind": "a2ui", "data": {"type": tool_res["tool"], "payload": tool_res["result"]}})
+                    if tool_res["tool"] == "inquiry_event_details":
+                        reply_text = tool_res["result"]["message"]
+                    else:
+                        parts.append({"kind": "a2ui", "data": {"type": tool_res["tool"], "payload": tool_res["result"]}})
 
             if not reply_text:
                 if any(p["kind"] == "a2ui" for p in parts):
@@ -452,13 +543,30 @@ async def chat(req: ChatRequest):
 
             parts.insert(0, {"kind": "text", "text": reply_text})
 
+            # Save assistant reply to DB
+            try:
+                conn_a = sqlite3.connect(DB_FILE)
+                c_a = conn_a.cursor()
+                c_a.execute(
+                    "INSERT INTO messages (session_id, role, content) VALUES (?, 'model', ?)",
+                    (session_id, reply_text),
+                )
+                conn_a.commit()
+                conn_a.close()
+            except Exception:
+                pass
+
         except Exception as e:
             # Fallback to local tool invocation
             tool_res = execute_matching_tool(req.message, req.event_context)
             if tool_res:
-                reply_text = f"Here is the calculated guidance for your celebration:\n\n```json\n{json.dumps(tool_res['result'], indent=2)}\n```"
-                parts.append({"kind": "text", "text": reply_text})
-                parts.append({"kind": "a2ui", "data": {"type": tool_res["tool"], "payload": tool_res["result"]}})
+                if tool_res["tool"] == "inquiry_event_details":
+                    reply_text = tool_res["result"]["message"]
+                    parts.append({"kind": "text", "text": reply_text})
+                else:
+                    reply_text = f"Here is the calculated guidance for your celebration:\n\n```json\n{json.dumps(tool_res['result'], indent=2)}\n```"
+                    parts.append({"kind": "text", "text": reply_text})
+                    parts.append({"kind": "a2ui", "data": {"type": tool_res["tool"], "payload": tool_res["result"]}})
             else:
                 reply_text = f"I received your request: '{req.message}'. (Note: {str(e)} — running in offline planner mode)."
                 parts.append({"kind": "text", "text": reply_text})
@@ -469,8 +577,11 @@ async def chat(req: ChatRequest):
             tname = tool_res["tool"]
             data = tool_res["result"]
 
-            if tname == "create_event":
+            if tname == "inquiry_event_details":
+                reply = data["message"]
+            elif tname == "create_event":
                 evt = data.get("event", {})
+                checklist = data.get("checklist", {})
                 reply = (
                     f"### 🎉 Event Created Successfully!\n"
                     f"- **Event Name:** {evt.get('name')}\n"
@@ -479,7 +590,16 @@ async def chat(req: ChatRequest):
                     f"- **Planned Budget:** ${evt.get('planned_budget', 0):,.2f}\n"
                     f"- **Guests:** {evt.get('expected_guest_count', 0)}\n"
                     f"- **Venue:** {evt.get('venue_name') or 'To be decided'}\n"
+                    f"- **Food & Catering:** {evt.get('special_instructions') or 'Standard setup'}\n\n"
+                    f"---\n\n"
+                    f"### 📋 Auto-Generated Launch Checklist\n"
+                    f"I've initialized your personalized milestone checklist across timeline phases:\n"
                 )
+                if checklist and "milestone_phases" in checklist:
+                    for phase in checklist["milestone_phases"]:
+                        reply += f"\n**{phase['timeline']}**\n"
+                        for t in phase["tasks"]:
+                            reply += f"- [{t['priority']}] {t['title']}\n"
             elif tname == "update_event":
                 evt = data.get("event", {})
                 reply = (

@@ -44,6 +44,67 @@ describe('Events Components Unit Tests (EventsListView & CreateEventModal)', () 
       await createBtn.trigger('click');
       expect(state.isCreateEventModalOpen).toBe(true);
     });
+
+    it('opens delete confirmation modal when delete button on an event card is clicked', async () => {
+      const wrapper = mount(EventsListView);
+      expect(wrapper.find('.delete-confirm-box').exists()).toBe(false);
+
+      const deleteBtns = wrapper.findAll('.btn-delete-event');
+      expect(deleteBtns.length).toBeGreaterThan(0);
+      await deleteBtns[0].trigger('click');
+
+      expect(wrapper.find('.delete-confirm-box').exists()).toBe(true);
+      expect(wrapper.text()).toContain('Delete Celebration?');
+      expect(wrapper.text()).toContain('Irreversible Action');
+    });
+
+    it('cancels delete confirmation modal when cancel button or close button is clicked', async () => {
+      const wrapper = mount(EventsListView);
+      await wrapper.find('.btn-delete-event').trigger('click');
+      expect(wrapper.find('.delete-confirm-box').exists()).toBe(true);
+
+      // Close via close icon
+      await wrapper.find('.btn-close-delete-modal').trigger('click');
+      expect(wrapper.find('.delete-confirm-box').exists()).toBe(false);
+
+      // Reopen and close via Cancel button
+      await wrapper.find('.btn-delete-event').trigger('click');
+      expect(wrapper.find('.delete-confirm-box').exists()).toBe(true);
+      await wrapper.find('.btn-cancel-delete').trigger('click');
+      expect(wrapper.find('.delete-confirm-box').exists()).toBe(false);
+
+      // Reopen and close via overlay backdrop click
+      await wrapper.find('.btn-delete-event').trigger('click');
+      expect(wrapper.find('.delete-confirm-box').exists()).toBe(true);
+      await wrapper.find('.delete-modal-overlay').trigger('click');
+      expect(wrapper.find('.delete-confirm-box').exists()).toBe(false);
+    });
+
+    it('permanently deletes event from store upon clicking confirm delete', async () => {
+      const wrapper = mount(EventsListView);
+      const initialCount = state.events.length;
+      const targetEvent = state.events[0];
+
+      await wrapper.find('.btn-delete-event').trigger('click');
+      expect(wrapper.find('.delete-confirm-box').exists()).toBe(true);
+
+      await wrapper.find('.btn-confirm-delete').trigger('click');
+      expect(wrapper.find('.delete-confirm-box').exists()).toBe(false);
+      expect(state.events.length).toBe(initialCount - 1);
+      expect(state.events.some((e) => e.id === targetEvent.id)).toBe(false);
+    });
+
+    it('renders empty celebrations state when events list is empty and allows creating new event', async () => {
+      state.events = [];
+      const wrapper = mount(EventsListView);
+
+      expect(wrapper.find('.empty-events-card').exists()).toBe(true);
+      expect(wrapper.text()).toContain('No Celebrations Found');
+
+      const createFirstBtn = wrapper.find('.empty-events-card button.btn-primary');
+      await createFirstBtn.trigger('click');
+      expect(state.isCreateEventModalOpen).toBe(true);
+    });
   });
 
   describe('CreateEventModal Component', () => {
@@ -170,18 +231,28 @@ describe('Events Components Unit Tests (EventsListView & CreateEventModal)', () 
       }
     });
 
-    it('closes modal on clicking close button or backdrop', async () => {
+    it('does not close modal on clicking outside overlay, but closes on clicking close button or cancel', async () => {
       state.isCreateEventModalOpen = true;
       const wrapper = mount(CreateEventModal);
+
+      // Clicking outside on overlay should NOT close the modal
+      await wrapper.find('.modal-overlay').trigger('click');
+      expect(state.isCreateEventModalOpen).toBe(true);
+
+      // Clicking the header close button closes the modal
       const closeBtn = wrapper.find('.modal-header button.btn-icon');
       if (closeBtn.exists()) {
         await closeBtn.trigger('click');
         expect(state.isCreateEventModalOpen).toBe(false);
       }
 
+      // Reopen and test footer Cancel button
       state.isCreateEventModalOpen = true;
-      await wrapper.find('.modal-overlay').trigger('click');
-      expect(state.isCreateEventModalOpen).toBe(false);
+      const cancelBtn = wrapper.find('.btn-cancel-create');
+      if (cancelBtn.exists()) {
+        await cancelBtn.trigger('click');
+        expect(state.isCreateEventModalOpen).toBe(false);
+      }
     });
   });
 });

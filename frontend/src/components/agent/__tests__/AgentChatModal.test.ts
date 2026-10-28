@@ -169,6 +169,16 @@ describe('AgentChatModal Component Unit Tests (Comprehensive Coverage)', () => {
                       venue_address: '99 Astro Way',
                       days_until: 60,
                       status: 'planning',
+                      special_instructions: 'Catering required: 4-course banquet',
+                    },
+                    checklist: {
+                      event_type: 'custom',
+                      milestone_phases: [
+                        {
+                          timeline: 'Early Phase (3+ months out)',
+                          tasks: [{ title: 'Reserve Starlight Ballroom', priority: 'Urgent' }],
+                        },
+                      ],
                     },
                     message: 'Event Galactic Gala Celebration has been successfully created!',
                   },
