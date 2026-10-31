@@ -42,12 +42,22 @@ async function handleEmailAuth() {
 </script>
 
 <template>
-  <div v-if="authState.isAuthModalOpen" class="modal-overlay" @click.self="authActions.closeAuthModal()">
-    <div class="modal-box auth-modal-box">
+  <div
+    v-if="authState.isAuthModalOpen"
+    class="modal-overlay"
+    @click.self="authActions.closeAuthModal()"
+    @keydown.esc="authActions.closeAuthModal()"
+  >
+    <div
+      class="modal-box auth-modal-box"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="auth-modal-title"
+    >
       <!-- Modal Header -->
       <div class="modal-header">
         <div>
-          <h3 style="font-size: 1.25rem; font-weight: 800; color: var(--text-main)">
+          <h3 id="auth-modal-title" style="font-size: 1.25rem; font-weight: 800; color: var(--text-main)">
             {{ authState.authMode === 'signup' ? 'Create Your Account' : 'Welcome to PlanCraft' }}
           </h3>
           <p style="font-size: 0.82rem; color: var(--text-muted); margin-top: 2px">
@@ -59,25 +69,34 @@ async function handleEmailAuth() {
           </p>
         </div>
 
-        <button class="btn-icon" @click="authActions.closeAuthModal()" title="Close dialog">
-          <X :size="18" />
+        <button
+          class="btn-icon"
+          aria-label="Close authentication dialog"
+          @click="authActions.closeAuthModal()"
+          title="Close dialog"
+        >
+          <X :size="18" aria-hidden="true" />
         </button>
       </div>
 
       <!-- Mode Switcher Tabs -->
-      <div class="auth-tabs">
+      <div class="auth-tabs" role="tablist" aria-label="Authentication modes">
         <button
           type="button"
+          role="tab"
           class="auth-tab-btn"
           :class="{ active: authState.authMode === 'signin' }"
+          :aria-selected="authState.authMode === 'signin'"
           @click="authActions.setAuthMode('signin')"
         >
           Sign In
         </button>
         <button
           type="button"
+          role="tab"
           class="auth-tab-btn"
           :class="{ active: authState.authMode === 'signup' }"
+          :aria-selected="authState.authMode === 'signup'"
           @click="authActions.setAuthMode('signup')"
         >
           Create Account
@@ -86,8 +105,13 @@ async function handleEmailAuth() {
 
       <div class="modal-body auth-modal-body">
         <!-- Error Alert Banner -->
-        <div v-if="authState.error" class="auth-error-banner">
-          <AlertCircle :size="16" style="flex-shrink: 0" />
+        <div
+          v-if="authState.error"
+          class="auth-error-banner"
+          role="alert"
+          aria-live="assertive"
+        >
+          <AlertCircle :size="16" style="flex-shrink: 0" aria-hidden="true" />
           <span>{{ authState.error }}</span>
         </div>
 
@@ -95,10 +119,11 @@ async function handleEmailAuth() {
         <button
           type="button"
           class="btn-google"
+          aria-label="Continue with Google authentication"
           :disabled="authState.isLoading"
           @click="handleGoogleSignIn"
         >
-          <svg class="google-icon" viewBox="0 0 24 24" width="18" height="18">
+          <svg class="google-icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
             <path
               fill="#4285F4"
               d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -120,17 +145,18 @@ async function handleEmailAuth() {
         </button>
 
         <!-- Divider -->
-        <div class="auth-divider">
+        <div class="auth-divider" aria-hidden="true">
           <span>or with email & password</span>
         </div>
 
         <!-- Email & Password Form -->
         <form @submit.prevent="handleEmailAuth" class="auth-form">
           <div v-if="authState.authMode === 'signup'" class="form-group">
-            <label class="form-label">Full Name</label>
+            <label class="form-label" for="auth-fullname">Full Name</label>
             <div class="input-with-icon">
-              <User :size="16" class="field-icon" />
+              <User :size="16" class="field-icon" aria-hidden="true" />
               <input
+                id="auth-fullname"
                 v-model="name"
                 type="text"
                 class="form-input"
@@ -141,10 +167,11 @@ async function handleEmailAuth() {
           </div>
 
           <div class="form-group">
-            <label class="form-label">Email Address</label>
+            <label class="form-label" for="auth-email-input">Email Address</label>
             <div class="input-with-icon">
-              <Mail :size="16" class="field-icon" />
+              <Mail :size="16" class="field-icon" aria-hidden="true" />
               <input
+                id="auth-email-input"
                 v-model="email"
                 type="email"
                 class="form-input"
@@ -155,10 +182,11 @@ async function handleEmailAuth() {
           </div>
 
           <div class="form-group">
-            <label class="form-label">Password</label>
+            <label class="form-label" for="auth-password-input">Password</label>
             <div class="input-with-icon">
-              <Lock :size="16" class="field-icon" />
+              <Lock :size="16" class="field-icon" aria-hidden="true" />
               <input
+                id="auth-password-input"
                 v-model="password"
                 :type="showPassword ? 'text' : 'password'"
                 class="form-input"
@@ -169,11 +197,13 @@ async function handleEmailAuth() {
               <button
                 type="button"
                 class="btn-toggle-eye"
+                :aria-label="showPassword ? 'Hide password' : 'Show password'"
+                :aria-pressed="showPassword"
                 @click="showPassword = !showPassword"
                 title="Toggle password view"
               >
-                <EyeOff v-if="showPassword" :size="16" />
-                <Eye v-else :size="16" />
+                <EyeOff v-if="showPassword" :size="16" aria-hidden="true" />
+                <Eye v-else :size="16" aria-hidden="true" />
               </button>
             </div>
           </div>

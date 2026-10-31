@@ -157,8 +157,12 @@ function handleAddVendor() {
             Verified Vendor Partner
           </span>
 
-          <a :href="'tel:' + v.mobileNumber" class="btn btn-outline btn-sm">
-            <Phone :size="14" />
+          <a
+            :href="'tel:' + v.mobileNumber"
+            class="btn btn-outline btn-sm"
+            :aria-label="'Call partner ' + v.name + ' at ' + v.mobileNumber"
+          >
+            <Phone :size="14" aria-hidden="true" />
             <span>Call Partner</span>
           </a>
         </div>
@@ -166,62 +170,104 @@ function handleAddVendor() {
     </div>
 
     <!-- Add Vendor Modal -->
-    <div v-if="isAddVendorModalOpen" class="modal-overlay" @click.self="isAddVendorModalOpen = false">
-      <div class="modal-box">
+    <div
+      v-if="isAddVendorModalOpen"
+      class="modal-overlay"
+      @click.self="isAddVendorModalOpen = false"
+      @keydown.esc="isAddVendorModalOpen = false"
+    >
+      <div
+        class="modal-box"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="add-vendor-modal-title"
+      >
         <div class="modal-header">
-          <h3 style="font-size: 1.15rem">Add Vendor Partner</h3>
-          <button class="btn-icon" @click="isAddVendorModalOpen = false">
-            <X :size="18" />
+          <h3 id="add-vendor-modal-title" style="font-size: 1.15rem">Add Vendor Partner</h3>
+          <button
+            class="btn-icon"
+            aria-label="Close add vendor modal"
+            @click="isAddVendorModalOpen = false"
+          >
+            <X :size="18" aria-hidden="true" />
           </button>
         </div>
 
         <div class="modal-body">
           <div class="form-group">
-            <label class="form-label">Vendor Company / Business Name</label>
-            <input v-model="newVendor.name" type="text" class="form-input"
-              placeholder="e.g. Royal Stage Lights & Trussing" />
+            <label class="form-label" for="vendor-company-name">Vendor Company / Business Name</label>
+            <input
+              id="vendor-company-name"
+              v-model="newVendor.name"
+              type="text"
+              class="form-input"
+              placeholder="e.g. Royal Stage Lights & Trussing"
+            />
           </div>
 
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px">
             <div class="form-group">
-              <label class="form-label">Service Category</label>
-              <input v-model="newVendor.category" type="text" class="form-input"
-                placeholder="e.g. Floral, Stage, Photography..." />
+              <label class="form-label" for="vendor-category">Service Category</label>
+              <input
+                id="vendor-category"
+                v-model="newVendor.category"
+                type="text"
+                class="form-input"
+                placeholder="e.g. Floral, Stage, Photography..."
+              />
             </div>
 
             <div class="form-group">
-              <label class="form-label">Contact Person Name</label>
-              <input v-model="newVendor.contactPerson" type="text" class="form-input" placeholder="e.g. Sandeep Roy" />
+              <label class="form-label" for="vendor-contact">Contact Person Name</label>
+              <input
+                id="vendor-contact"
+                v-model="newVendor.contactPerson"
+                type="text"
+                class="form-input"
+                placeholder="e.g. Sandeep Roy"
+              />
             </div>
           </div>
 
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px">
             <div class="form-group">
-              <label class="form-label">Mobile Number</label>
-              <input v-model="newVendor.mobileNumber" type="text" class="form-input" placeholder="+91 98450 11223" />
+              <label class="form-label" for="vendor-phone">Mobile Number</label>
+              <input
+                id="vendor-phone"
+                v-model="newVendor.mobileNumber"
+                type="text"
+                class="form-input"
+                placeholder="+91 98450 11223"
+              />
             </div>
 
             <div class="form-group">
-              <label class="form-label">Email Address</label>
-              <input v-model="newVendor.email" type="email" class="form-input" placeholder="partner@vendor.com" />
+              <label class="form-label" for="vendor-email">Email Address</label>
+              <input
+                id="vendor-email"
+                v-model="newVendor.email"
+                type="email"
+                class="form-input"
+                placeholder="partner@vendor.com"
+              />
             </div>
           </div>
 
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px">
             <div class="form-group">
-              <label class="form-label">Total Agreed Price (₹)</label>
-              <input v-model.number="newVendor.agreedPriceMajor" type="number" class="form-input" />
+              <label class="form-label" for="vendor-price">Total Agreed Price (₹)</label>
+              <input id="vendor-price" v-model.number="newVendor.agreedPriceMajor" type="number" class="form-input" />
             </div>
 
             <div class="form-group">
-              <label class="form-label">Advance Paid (₹)</label>
-              <input v-model.number="newVendor.advancePaidMajor" type="number" class="form-input" />
+              <label class="form-label" for="vendor-advance">Advance Paid (₹)</label>
+              <input id="vendor-advance" v-model.number="newVendor.advancePaidMajor" type="number" class="form-input" />
             </div>
           </div>
 
           <div class="form-group">
-            <label class="form-label">Contract Status</label>
-            <select v-model="newVendor.status" class="form-select">
+            <label class="form-label" for="vendor-status">Contract Status</label>
+            <select id="vendor-status" v-model="newVendor.status" class="form-select">
               <option value="Contract Signed">Contract Signed</option>
               <option value="Quoted">Quoted</option>
               <option value="In Discussion">In Discussion</option>
@@ -230,9 +276,14 @@ function handleAddVendor() {
           </div>
 
           <div class="form-group">
-            <label class="form-label">Deliverables & Deliverable Notes</label>
-            <textarea v-model="newVendor.notes" rows="2" class="form-textarea"
-              placeholder="e.g. Includes 4 photographers, 2 drone pilots, same-day teaser..."></textarea>
+            <label class="form-label" for="vendor-notes">Deliverables & Deliverable Notes</label>
+            <textarea
+              id="vendor-notes"
+              v-model="newVendor.notes"
+              rows="2"
+              class="form-textarea"
+              placeholder="e.g. Includes 4 photographers, 2 drone pilots, same-day teaser..."
+            ></textarea>
           </div>
         </div>
 

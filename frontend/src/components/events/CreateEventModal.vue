@@ -94,8 +94,16 @@ function handleCreate() {
 </script>
 
 <template>
-  <div class="modal-overlay">
-    <div class="modal-box large">
+  <div
+    class="modal-overlay"
+    @keydown.esc="actions.closeCreateEventModal()"
+  >
+    <div
+      class="modal-box large"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="create-event-modal-title"
+    >
       <!-- Modal Header -->
       <div class="modal-header">
         <div style="display: flex; align-items: center; gap: 10px">
@@ -110,11 +118,12 @@ function handleCreate() {
               align-items: center;
               justify-content: center;
             "
+            aria-hidden="true"
           >
             <Sparkles :size="20" />
           </div>
           <div>
-            <h3 style="font-size: 1.2rem">New Event Guided Wizard</h3>
+            <h3 id="create-event-modal-title" style="font-size: 1.2rem">New Event Guided Wizard</h3>
             <div style="font-size: 0.78rem; color: var(--text-muted)">
               Step {{ currentStep }} of 5:
               {{
@@ -132,13 +141,24 @@ function handleCreate() {
           </div>
         </div>
 
-        <button class="btn-icon" @click="actions.closeCreateEventModal()">
-          <X :size="20" />
+        <button
+          class="btn-icon"
+          aria-label="Close modal"
+          @click="actions.closeCreateEventModal()"
+        >
+          <X :size="20" aria-hidden="true" />
         </button>
       </div>
 
       <!-- Step Indicator Tracker -->
-      <div style="padding: 14px 24px 0; background: #FAFAFA; border-bottom: 1px solid var(--surface-border)">
+      <div
+        style="padding: 14px 24px 0; background: #FAFAFA; border-bottom: 1px solid var(--surface-border)"
+        role="progressbar"
+        aria-valuemin="1"
+        aria-valuemax="5"
+        :aria-valuenow="currentStep"
+        :aria-valuetext="'Step ' + currentStep + ' of 5'"
+      >
         <div style="display: flex; align-items: center; justify-content: space-between">
           <div
             v-for="step in 5"
@@ -161,12 +181,14 @@ function handleCreate() {
                 background: currentStep >= step ? 'var(--primary)' : 'var(--surface-subtle)',
                 color: currentStep >= step ? 'white' : 'var(--text-muted)',
               }"
+              aria-hidden="true"
             >
               {{ currentStep > step ? '✓' : step }}
             </div>
             <div
               v-if="step < 5"
               style="flex: 1; height: 3px; background: var(--surface-border); border-radius: 99px; margin-right: 8px"
+              aria-hidden="true"
             >
               <div
                 style="height: 100%; background: var(--primary); transition: width 0.2s ease"
@@ -189,8 +211,9 @@ function handleCreate() {
           </div>
 
           <div class="form-group">
-            <label class="form-label">Event Name</label>
+            <label class="form-label" for="create-event-name">Event Name</label>
             <input
+              id="create-event-name"
               v-model="form.name"
               type="text"
               class="form-input"
@@ -199,12 +222,19 @@ function handleCreate() {
           </div>
 
           <div class="form-group">
-            <label class="form-label">Event Type</label>
-            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px">
+            <label class="form-label" id="event-type-label">Event Type</label>
+            <div
+              role="radiogroup"
+              aria-labelledby="event-type-label"
+              style="display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px"
+            >
               <button
                 v-for="opt in eventTypeOptions"
                 :key="opt.value"
                 type="button"
+                role="radio"
+                :aria-checked="form.eventType === opt.value"
+                :aria-label="opt.label"
                 style="
                   padding: 12px;
                   border-radius: var(--radius-md);
@@ -221,7 +251,7 @@ function handleCreate() {
                 }"
                 @click="form.eventType = opt.value"
               >
-                <span style="font-size: 1.3rem">{{ opt.icon }}</span>
+                <span style="font-size: 1.3rem" aria-hidden="true">{{ opt.icon }}</span>
                 <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-main)">{{ opt.label }}</span>
               </button>
             </div>
@@ -239,19 +269,20 @@ function handleCreate() {
 
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px">
             <div class="form-group">
-              <label class="form-label">Start Date</label>
-              <input v-model="form.startDate" type="date" class="form-input" />
+              <label class="form-label" for="create-start-date">Start Date</label>
+              <input id="create-start-date" v-model="form.startDate" type="date" class="form-input" />
             </div>
 
             <div class="form-group">
-              <label class="form-label">End Date (Optional)</label>
-              <input v-model="form.endDate" type="date" class="form-input" />
+              <label class="form-label" for="create-end-date">End Date (Optional)</label>
+              <input id="create-end-date" v-model="form.endDate" type="date" class="form-input" />
             </div>
           </div>
 
           <div class="form-group">
-            <label class="form-label">Venue / Banquet Name</label>
+            <label class="form-label" for="create-venue-name">Venue / Banquet Name</label>
             <input
+              id="create-venue-name"
               v-model="form.venueName"
               type="text"
               class="form-input"
@@ -260,8 +291,9 @@ function handleCreate() {
           </div>
 
           <div class="form-group">
-            <label class="form-label">Venue Address & City</label>
+            <label class="form-label" for="create-venue-address">Venue Address & City</label>
             <input
+              id="create-venue-address"
               v-model="form.venueAddress"
               type="text"
               class="form-input"
@@ -281,8 +313,8 @@ function handleCreate() {
 
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px">
             <div class="form-group">
-              <label class="form-label">Currency</label>
-              <select v-model="form.currency" class="form-select">
+              <label class="form-label" for="create-currency">Currency</label>
+              <select id="create-currency" v-model="form.currency" class="form-select">
                 <option value="INR">INR (₹ - Indian Rupee)</option>
                 <option value="USD">USD ($ - US Dollar)</option>
                 <option value="EUR">EUR (€ - Euro)</option>
@@ -290,8 +322,9 @@ function handleCreate() {
             </div>
 
             <div class="form-group">
-              <label class="form-label">Target Planned Budget</label>
+              <label class="form-label" for="create-budget">Target Planned Budget</label>
               <input
+                id="create-budget"
                 v-model.number="form.plannedBudgetMajor"
                 type="number"
                 class="form-input"
@@ -304,8 +337,9 @@ function handleCreate() {
           </div>
 
           <div class="form-group">
-            <label class="form-label">Expected Total Guests (Pax)</label>
+            <label class="form-label" for="create-guest-count">Expected Total Guests (Pax)</label>
             <input
+              id="create-guest-count"
               v-model.number="form.expectedGuestCount"
               type="number"
               class="form-input"
@@ -328,8 +362,9 @@ function handleCreate() {
           </div>
 
           <div class="form-group">
-            <label class="form-label">Color Theme / Mood</label>
+            <label class="form-label" for="create-theme">Color Theme / Mood</label>
             <input
+              id="create-theme"
               v-model="form.theme"
               type="text"
               class="form-input"
@@ -338,8 +373,9 @@ function handleCreate() {
           </div>
 
           <div class="form-group">
-            <label class="form-label">Guest Dress Code</label>
+            <label class="form-label" for="create-dress-code">Guest Dress Code</label>
             <input
+              id="create-dress-code"
               v-model="form.dressCode"
               type="text"
               class="form-input"
@@ -348,8 +384,9 @@ function handleCreate() {
           </div>
 
           <div class="form-group">
-            <label class="form-label">Special Notes / Run Sheet Instructions</label>
+            <label class="form-label" for="create-notes">Special Notes / Run Sheet Instructions</label>
             <textarea
+              id="create-notes"
               v-model="form.specialInstructions"
               rows="3"
               class="form-textarea"

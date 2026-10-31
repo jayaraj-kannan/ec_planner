@@ -263,8 +263,9 @@ function returnToPlanner() {
           :class="{ 'btn-loading': isRefreshing }"
           @click="handleRefresh"
           title="Sync schedule updates"
+          aria-label="Sync schedule updates"
         >
-          <RefreshCw :size="13" :class="{ spinning: isRefreshing }" />
+          <RefreshCw :size="13" :class="{ spinning: isRefreshing }" aria-hidden="true" />
           <span class="hide-mobile">Sync</span>
         </button>
 
@@ -273,8 +274,9 @@ function returnToPlanner() {
           class="btn btn-primary btn-sm share-btn compact-btn"
           @click="shareUrl"
           title="Share dynamic hash URL with guests"
+          :aria-label="copied ? 'Link copied to clipboard' : 'Share dynamic hash URL with guests'"
         >
-          <component :is="copied ? Check : Share2" :size="13" />
+          <component :is="copied ? Check : Share2" :size="13" aria-hidden="true" />
           <span>{{ copied ? 'Copied' : 'Share' }}</span>
         </button>
       </div>

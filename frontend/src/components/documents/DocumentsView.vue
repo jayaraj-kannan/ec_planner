@@ -88,13 +88,22 @@ function closePreview() {
 
         <div
           style="display: flex; gap: 8px; border-top: 1px solid var(--surface-border); padding-top: 14px; margin-top: 16px">
-          <button class="btn btn-outline btn-sm" style="flex: 1" @click="openPreview(doc)">
-            <Eye :size="14" />
+          <button
+            class="btn btn-outline btn-sm"
+            style="flex: 1"
+            :aria-label="'Preview ' + doc.title"
+            @click="openPreview(doc)"
+          >
+            <Eye :size="14" aria-hidden="true" />
             <span>Preview</span>
           </button>
 
-          <button class="btn btn-secondary btn-sm" @click="openPreview(doc)">
-            <Download :size="14" />
+          <button
+            class="btn btn-secondary btn-sm"
+            :aria-label="'Download ' + doc.title"
+            @click="openPreview(doc)"
+          >
+            <Download :size="14" aria-hidden="true" />
             <span>Download</span>
           </button>
         </div>
@@ -102,15 +111,29 @@ function closePreview() {
     </div>
 
     <!-- Document Preview Modal -->
-    <div v-if="previewDoc" class="modal-overlay" @click.self="closePreview">
-      <div class="modal-box">
+    <div
+      v-if="previewDoc"
+      class="modal-overlay"
+      @click.self="closePreview"
+      @keydown.esc="closePreview"
+    >
+      <div
+        class="modal-box"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="preview-doc-modal-title"
+      >
         <div class="modal-header">
           <div style="display: flex; align-items: center; gap: 10px">
-            <FileCheck :size="20" style="color: var(--primary)" />
-            <span style="font-weight: 700; font-size: 1rem">{{ previewDoc.title }}</span>
+            <FileCheck :size="20" style="color: var(--primary)" aria-hidden="true" />
+            <span id="preview-doc-modal-title" style="font-weight: 700; font-size: 1rem">{{ previewDoc.title }}</span>
           </div>
-          <button class="btn-icon" @click="closePreview">
-            <X :size="18" />
+          <button
+            class="btn-icon"
+            aria-label="Close document preview"
+            @click="closePreview"
+          >
+            <X :size="18" aria-hidden="true" />
           </button>
         </div>
 

@@ -571,41 +571,68 @@ function navigateToTasksTab() {
 </script>
 
 <template>
-  <div v-if="state.isAgentChatModalOpen" class="modal-overlay" @click="actions.closeAgentChatModal()">
-    <div class="agent-modal-card" @click.stop>
+  <div
+    v-if="state.isAgentChatModalOpen"
+    class="modal-overlay"
+    @click="actions.closeAgentChatModal()"
+    @keydown.esc="actions.closeAgentChatModal()"
+  >
+    <div
+      class="agent-modal-card"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="agent-modal-title"
+      aria-describedby="agent-modal-subtext"
+      @click.stop
+    >
       <!-- Modal Header -->
       <div class="agent-header">
         <div class="agent-header-left">
-          <div class="agent-badge-icon">
+          <div class="agent-badge-icon" aria-hidden="true">
             <Sparkles :size="18" />
           </div>
           <div>
             <div class="agent-title-row">
-              <span class="agent-title">PlanCraft ADK Assistant</span>
-              <span class="status-indicator" :class="{ online: isConnected }">
-                <span class="dot"></span>
+              <span id="agent-modal-title" class="agent-title">PlanCraft ADK Assistant</span>
+              <span
+                class="status-indicator"
+                :class="{ online: isConnected }"
+                role="status"
+                :aria-label="isConnected ? 'AI Agent Online' : 'Connecting to agent'"
+              >
+                <span class="dot" aria-hidden="true"></span>
                 {{ isConnected ? 'AI Agent Online' : 'Connecting to agent...' }}
               </span>
             </div>
-            <div class="agent-subtext">
+            <div id="agent-modal-subtext" class="agent-subtext">
               Powered by Google ADK & Gemini 2.5 • Function Tools Enabled
             </div>
           </div>
         </div>
 
         <div class="agent-header-actions">
-          <button class="btn-icon" @click="clearChat" title="Reset chat conversation">
-            <RotateCcw :size="16" />
+          <button
+            class="btn-icon"
+            @click="clearChat"
+            title="Reset chat conversation"
+            aria-label="Reset chat conversation"
+          >
+            <RotateCcw :size="16" aria-hidden="true" />
           </button>
-          <button class="btn-icon" @click="actions.closeAgentChatModal()" title="Close assistant">
-            <X :size="18" />
+          <button
+            class="btn-icon"
+            @click="actions.closeAgentChatModal()"
+            title="Close assistant"
+            aria-label="Close assistant"
+          >
+            <X :size="18" aria-hidden="true" />
           </button>
         </div>
       </div>
 
       <!-- Active Event Context Banner -->
-      <div v-if="currentEvent" class="context-banner">
-        <Calendar :size="14" style="color: var(--primary); flex-shrink: 0" />
+      <div v-if="currentEvent" class="context-banner" aria-label="Current planning context">
+        <Calendar :size="14" style="color: var(--primary); flex-shrink: 0" aria-hidden="true" />
         <span>
           Planning Context: <strong>{{ currentEvent.name }}</strong> ({{ currentEvent.eventType.toUpperCase() }}) •
           Budget: <strong>${{ (currentEvent.plannedBudgetMinor / 100).toLocaleString() }}</strong> •
@@ -614,11 +641,12 @@ function navigateToTasksTab() {
       </div>
 
       <!-- Quick Suggestion Chips -->
-      <div class="chips-container">
+      <div class="chips-container" role="group" aria-label="Quick prompt suggestions">
         <button
           v-for="(chip, idx) in quickPrompts"
           :key="idx"
           class="prompt-chip"
+          :aria-label="'Prompt: ' + chip.label"
           @click="sendQuickPrompt(chip.query)"
         >
           {{ chip.label }}
@@ -626,7 +654,13 @@ function navigateToTasksTab() {
       </div>
 
       <!-- Chat History Stream -->
-      <div ref="chatContainer" class="agent-chat-stream">
+      <div
+        ref="chatContainer"
+        class="agent-chat-stream"
+        role="log"
+        aria-live="polite"
+        aria-label="AI Copilot conversation history"
+      >
         <div
           v-for="msg in messages"
           :key="msg.id"
@@ -1137,14 +1171,16 @@ function navigateToTasksTab() {
           type="text"
           class="agent-input"
           placeholder="Ask PlanCraft AI (e.g. 'Break down my wedding budget', 'Create run sheet')..."
+          aria-label="Ask PlanCraft AI Copilot"
           :disabled="isLoading"
         />
         <button
           type="submit"
           class="btn btn-primary agent-send-btn"
+          aria-label="Send message to PlanCraft AI"
           :disabled="isLoading || !inputQuery.trim()"
         >
-          <Send :size="15" />
+          <Send :size="15" aria-hidden="true" />
           <span>Send</span>
         </button>
       </form>

@@ -104,14 +104,21 @@ function handleAddTask() {
     <div class="card" style="padding: 10px 14px">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px">
         <div style="display: flex; align-items: center; gap: 6px">
-          <CheckSquare :size="16" style="color: var(--primary)" />
+          <CheckSquare :size="16" style="color: var(--primary)" aria-hidden="true" />
           <span style="font-weight: 700; font-size: 0.88rem">Milestones Progress</span>
         </div>
         <span style="font-weight: 800; font-size: 0.9rem; color: var(--primary)">
           {{ taskMetrics.completed }} / {{ taskMetrics.total }} ({{ taskMetrics.completionPercent }}%)
         </span>
       </div>
-      <div class="progress-track">
+      <div
+        class="progress-track"
+        role="progressbar"
+        :aria-valuenow="taskMetrics.completionPercent"
+        aria-valuemin="0"
+        aria-valuemax="100"
+        :aria-label="'Milestone checklist progress: ' + taskMetrics.completionPercent + '% completed'"
+      >
         <div class="progress-fill primary" :style="{ width: taskMetrics.completionPercent + '%' }"></div>
       </div>
     </div>
@@ -119,10 +126,11 @@ function handleAddTask() {
     <!-- Filters Bar (Horizontal scrollable on mobile) -->
     <div class="filters-bar-wrap">
       <!-- Status Tabs -->
-      <div class="filters-scroll-row">
+      <div class="filters-scroll-row" role="group" aria-label="Task status filters">
         <button
           class="btn btn-sm"
           :class="selectedFilter === 'all' ? 'btn-primary' : 'btn-secondary'"
+          :aria-pressed="selectedFilter === 'all'"
           @click="selectedFilter = 'all'"
         >
           All ({{ taskMetrics.total }})
@@ -130,6 +138,7 @@ function handleAddTask() {
         <button
           class="btn btn-sm"
           :class="selectedFilter === 'overdue' ? 'btn-primary' : 'btn-secondary'"
+          :aria-pressed="selectedFilter === 'overdue'"
           @click="selectedFilter = 'overdue'"
         >
           ⚠️ Overdue ({{ taskMetrics.overdue }})
@@ -137,6 +146,7 @@ function handleAddTask() {
         <button
           class="btn btn-sm"
           :class="selectedFilter === 'pending' ? 'btn-primary' : 'btn-secondary'"
+          :aria-pressed="selectedFilter === 'pending'"
           @click="selectedFilter = 'pending'"
         >
           Pending ({{ taskMetrics.pending }})
@@ -144,6 +154,7 @@ function handleAddTask() {
         <button
           class="btn btn-sm"
           :class="selectedFilter === 'completed' ? 'btn-primary' : 'btn-secondary'"
+          :aria-pressed="selectedFilter === 'completed'"
           @click="selectedFilter = 'completed'"
         >
           ✓ Completed ({{ taskMetrics.completed }})
@@ -151,6 +162,7 @@ function handleAddTask() {
         <button
           class="btn btn-sm"
           :class="selectedFilter === 'high' ? 'btn-primary' : 'btn-secondary'"
+          :aria-pressed="selectedFilter === 'high'"
           @click="selectedFilter = 'high'"
         >
           🔥 High Priority
@@ -159,8 +171,14 @@ function handleAddTask() {
 
       <!-- Category Selector -->
       <div style="display: flex; align-items: center; gap: 8px">
-        <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600">Category:</span>
-        <select v-model="selectedCategory" class="form-select" style="padding: 6px 12px; font-size: 0.82rem; width: auto">
+        <label for="checklist-category-select" style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600">Category:</label>
+        <select
+          id="checklist-category-select"
+          v-model="selectedCategory"
+          class="form-select"
+          aria-label="Filter tasks by category"
+          style="padding: 6px 12px; font-size: 0.82rem; width: auto"
+        >
           <option value="all">All Categories</option>
           <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
         </select>
@@ -168,11 +186,12 @@ function handleAddTask() {
     </div>
 
     <!-- Task Items List -->
-    <div style="display: flex; flex-direction: column; gap: 10px">
+    <div style="display: flex; flex-direction: column; gap: 10px" role="list" aria-label="Tasks list">
       <div
         v-for="task in filteredTasks"
         :key="task.id"
         class="card"
+        role="listitem"
         style="padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; gap: 14px"
         :style="{
           opacity: task.status === 'completed' ? 0.7 : 1,
@@ -182,6 +201,9 @@ function handleAddTask() {
         <div style="display: flex; align-items: flex-start; gap: 14px; flex: 1">
           <!-- Checkbox -->
           <button
+            role="checkbox"
+            :aria-checked="task.status === 'completed'"
+            :aria-label="'Mark ' + task.taskName + ' as ' + (task.status === 'completed' ? 'incomplete' : 'completed')"
             @click="actions.toggleTask(task.id)"
             style="
               width: 24px;
@@ -201,7 +223,7 @@ function handleAddTask() {
               color: 'white',
             }"
           >
-            <Check v-if="task.status === 'completed'" :size="16" />
+            <Check v-if="task.status === 'completed'" :size="16" aria-hidden="true" />
           </button>
 
           <div>
@@ -244,9 +266,10 @@ function handleAddTask() {
             class="btn-icon"
             @click="actions.deleteTask(task.id)"
             title="Delete task"
+            :aria-label="'Delete task ' + task.taskName"
             style="color: var(--text-light)"
           >
-            <Trash2 :size="16" />
+            <Trash2 :size="16" aria-hidden="true" />
           </button>
         </div>
       </div>
@@ -271,19 +294,34 @@ function handleAddTask() {
     </div>
 
     <!-- Add Task Modal -->
-    <div v-if="isAddTaskModalOpen" class="modal-overlay" @click.self="isAddTaskModalOpen = false">
-      <div class="modal-box">
+    <div
+      v-if="isAddTaskModalOpen"
+      class="modal-overlay"
+      @click.self="isAddTaskModalOpen = false"
+      @keydown.esc="isAddTaskModalOpen = false"
+    >
+      <div
+        class="modal-box"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="add-task-modal-title"
+      >
         <div class="modal-header">
-          <h3 style="font-size: 1.15rem">Add New Checklist Milestone</h3>
-          <button class="btn-icon" @click="isAddTaskModalOpen = false">
-            <X :size="18" />
+          <h3 id="add-task-modal-title" style="font-size: 1.15rem">Add New Checklist Milestone</h3>
+          <button
+            class="btn-icon"
+            aria-label="Close add task modal"
+            @click="isAddTaskModalOpen = false"
+          >
+            <X :size="18" aria-hidden="true" />
           </button>
         </div>
 
         <div class="modal-body">
           <div class="form-group">
-            <label class="form-label">Task Description</label>
+            <label class="form-label" for="new-task-name">Task Description</label>
             <input
+              id="new-task-name"
               v-model="newTask.taskName"
               type="text"
               class="form-input"
@@ -293,8 +331,9 @@ function handleAddTask() {
 
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px">
             <div class="form-group">
-              <label class="form-label">Category</label>
+              <label class="form-label" for="new-task-category">Category</label>
               <input
+                id="new-task-category"
                 v-model="newTask.category"
                 type="text"
                 class="form-input"
@@ -303,8 +342,9 @@ function handleAddTask() {
             </div>
 
             <div class="form-group">
-              <label class="form-label">Assigned Person</label>
+              <label class="form-label" for="new-task-assigned">Assigned Person</label>
               <input
+                id="new-task-assigned"
                 v-model="newTask.assignedTo"
                 type="text"
                 class="form-input"
@@ -315,13 +355,13 @@ function handleAddTask() {
 
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px">
             <div class="form-group">
-              <label class="form-label">Due Date</label>
-              <input v-model="newTask.dueDate" type="date" class="form-input" />
+              <label class="form-label" for="new-task-duedate">Due Date</label>
+              <input id="new-task-duedate" v-model="newTask.dueDate" type="date" class="form-input" />
             </div>
 
             <div class="form-group">
-              <label class="form-label">Priority</label>
-              <select v-model="newTask.priority" class="form-select">
+              <label class="form-label" for="new-task-priority">Priority</label>
+              <select id="new-task-priority" v-model="newTask.priority" class="form-select">
                 <option value="high">High Priority</option>
                 <option value="medium">Medium Priority</option>
                 <option value="low">Low Priority</option>
@@ -330,8 +370,9 @@ function handleAddTask() {
           </div>
 
           <div class="form-group">
-            <label class="form-label">Notes or Vendor Instructions</label>
+            <label class="form-label" for="new-task-notes">Notes or Vendor Instructions</label>
             <textarea
+              id="new-task-notes"
               v-model="newTask.notes"
               rows="2"
               class="form-textarea"

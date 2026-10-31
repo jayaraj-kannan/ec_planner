@@ -196,35 +196,51 @@ function exportCSV() {
         <!-- Search box -->
         <div
           style="display: flex; align-items: center; gap: 8px; flex: 1; max-width: 320px; background: var(--surface-subtle); padding: 8px 12px; border-radius: var(--radius-md); border: 1px solid var(--surface-border)">
-          <Search :size="16" style="color: var(--text-light)" />
-          <input v-model="searchQuery" type="text" placeholder="Search name, family, phone..."
-            style="border: none; background: transparent; outline: none; width: 100%; font-size: 0.88rem" />
+          <Search :size="16" style="color: var(--text-light)" aria-hidden="true" />
+          <input
+            id="guest-search-input"
+            v-model="searchQuery"
+            type="text"
+            placeholder="Search name, family, phone..."
+            aria-label="Search guests by name, family, or phone"
+            style="border: none; background: transparent; outline: none; width: 100%; font-size: 0.88rem"
+          />
         </div>
 
         <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center">
           <!-- Status filter -->
-          <div style="display: flex; gap: 6px">
+          <div style="display: flex; gap: 6px" role="group" aria-label="Filter guests by RSVP status">
             <button class="btn btn-sm" :class="selectedRSVPFilter === 'all' ? 'btn-primary' : 'btn-secondary'"
+              :aria-pressed="selectedRSVPFilter === 'all'"
               @click="selectedRSVPFilter = 'all'">
               All
             </button>
             <button class="btn btn-sm" :class="selectedRSVPFilter === 'confirmed' ? 'btn-primary' : 'btn-secondary'"
+              :aria-pressed="selectedRSVPFilter === 'confirmed'"
               @click="selectedRSVPFilter = 'confirmed'">
               Confirmed
             </button>
             <button class="btn btn-sm" :class="selectedRSVPFilter === 'pending' ? 'btn-primary' : 'btn-secondary'"
+              :aria-pressed="selectedRSVPFilter === 'pending'"
               @click="selectedRSVPFilter = 'pending'">
               Pending
             </button>
             <button class="btn btn-sm" :class="selectedRSVPFilter === 'declined' ? 'btn-primary' : 'btn-secondary'"
+              :aria-pressed="selectedRSVPFilter === 'declined'"
               @click="selectedRSVPFilter = 'declined'">
               Declined
             </button>
           </div>
 
           <!-- Category filter -->
-          <select v-model="selectedCategory" class="form-select"
-            style="width: auto; padding: 6px 12px; font-size: 0.82rem">
+          <label for="guest-category-filter" class="sr-only">Filter by affiliation group</label>
+          <select
+            id="guest-category-filter"
+            v-model="selectedCategory"
+            class="form-select"
+            aria-label="Filter guests by group affiliation"
+            style="width: auto; padding: 6px 12px; font-size: 0.82rem"
+          >
             <option value="all">All Groups</option>
             <option value="Bride Family">Bride Family</option>
             <option value="Groom Family">Groom Family</option>
@@ -240,17 +256,20 @@ function exportCSV() {
     <!-- Guests Table -->
     <div class="card">
       <div style="overflow-x: auto">
-        <table style="width: 100%; border-collapse: collapse; font-size: 0.88rem; text-align: left">
+        <table
+          aria-label="Guest List and RSVP Status"
+          style="width: 100%; border-collapse: collapse; font-size: 0.88rem; text-align: left"
+        >
           <thead>
             <tr
               style="border-bottom: 2px solid var(--surface-border); color: var(--text-muted); font-size: 0.78rem; text-transform: uppercase">
-              <th style="padding: 10px 14px">Guest / Family Contact</th>
-              <th style="padding: 10px 14px">Affiliation</th>
-              <th style="padding: 10px 14px">Pax</th>
-              <th style="padding: 10px 14px">RSVP Status (Click to Toggle)</th>
-              <th style="padding: 10px 14px">Meal Diet</th>
-              <th style="padding: 10px 14px">Hotel Stay</th>
-              <th style="padding: 10px 14px; text-align: right">Actions</th>
+              <th scope="col" style="padding: 10px 14px">Guest / Family Contact</th>
+              <th scope="col" style="padding: 10px 14px">Affiliation</th>
+              <th scope="col" style="padding: 10px 14px">Pax</th>
+              <th scope="col" style="padding: 10px 14px">RSVP Status (Click to Toggle)</th>
+              <th scope="col" style="padding: 10px 14px">Meal Diet</th>
+              <th scope="col" style="padding: 10px 14px">Hotel Stay</th>
+              <th scope="col" style="padding: 10px 14px; text-align: right">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -282,16 +301,20 @@ function exportCSV() {
 
               <!-- Quick RSVP Status Toggle button -->
               <td style="padding: 14px">
-                <button @click="quickToggleRSVP(g.id, g.rsvpStatus)"
+                <button
+                  @click="quickToggleRSVP(g.id, g.rsvpStatus)"
                   style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: var(--radius-full); font-size: 0.78rem; font-weight: 700; cursor: pointer; transition: all 0.15s ease"
                   :class="{
                     'badge-success': g.rsvpStatus === 'confirmed',
                     'badge-warning': g.rsvpStatus === 'pending',
                     'badge-danger': g.rsvpStatus === 'declined',
-                  }" title="Click to toggle RSVP status">
-                  <CheckCircle2 v-if="g.rsvpStatus === 'confirmed'" :size="13" />
-                  <Clock v-else-if="g.rsvpStatus === 'pending'" :size="13" />
-                  <XCircle v-else :size="13" />
+                  }"
+                  :aria-label="'Update RSVP for ' + g.guestName + ', current status ' + g.rsvpStatus"
+                  title="Click to toggle RSVP status"
+                >
+                  <CheckCircle2 v-if="g.rsvpStatus === 'confirmed'" :size="13" aria-hidden="true" />
+                  <Clock v-else-if="g.rsvpStatus === 'pending'" :size="13" aria-hidden="true" />
+                  <XCircle v-else :size="13" aria-hidden="true" />
                   <span>{{ g.rsvpStatus.toUpperCase() }}</span>
                 </button>
               </td>
@@ -312,9 +335,14 @@ function exportCSV() {
               </td>
 
               <td style="padding: 14px; text-align: right">
-                <button class="btn-icon" style="color: var(--text-light)" @click="actions.deleteGuest(g.id)"
-                  title="Remove guest">
-                  <Trash2 :size="16" />
+                <button
+                  class="btn-icon"
+                  style="color: var(--text-light)"
+                  @click="actions.deleteGuest(g.id)"
+                  title="Remove guest"
+                  :aria-label="'Remove guest ' + g.guestName"
+                >
+                  <Trash2 :size="16" aria-hidden="true" />
                 </button>
               </td>
             </tr>
@@ -328,31 +356,56 @@ function exportCSV() {
     </div>
 
     <!-- Add Guest Modal -->
-    <div v-if="isAddGuestModalOpen" class="modal-overlay" @click.self="isAddGuestModalOpen = false">
-      <div class="modal-box">
+    <div
+      v-if="isAddGuestModalOpen"
+      class="modal-overlay"
+      @click.self="isAddGuestModalOpen = false"
+      @keydown.esc="isAddGuestModalOpen = false"
+    >
+      <div
+        class="modal-box"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="add-guest-modal-title"
+      >
         <div class="modal-header">
-          <h3 style="font-size: 1.15rem">Add Guest or Family Group</h3>
-          <button class="btn-icon" @click="isAddGuestModalOpen = false">
-            <X :size="18" />
+          <h3 id="add-guest-modal-title" style="font-size: 1.15rem">Add Guest or Family Group</h3>
+          <button
+            class="btn-icon"
+            aria-label="Close add guest modal"
+            @click="isAddGuestModalOpen = false"
+          >
+            <X :size="18" aria-hidden="true" />
           </button>
         </div>
 
         <div class="modal-body">
           <div class="form-group">
-            <label class="form-label">Primary Guest / Family Head Name</label>
-            <input v-model="newGuest.guestName" type="text" class="form-input"
-              placeholder="e.g. Ramesh & Gayatri Murthy" />
+            <label class="form-label" for="new-guest-name">Primary Guest / Family Head Name</label>
+            <input
+              id="new-guest-name"
+              v-model="newGuest.guestName"
+              type="text"
+              class="form-input"
+              placeholder="e.g. Ramesh & Gayatri Murthy"
+            />
           </div>
 
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px">
             <div class="form-group">
-              <label class="form-label">Family / Group Name</label>
-              <input v-model="newGuest.familyName" type="text" class="form-input" placeholder="e.g. Murthy Clan" />
+              <label class="form-label" for="new-guest-family">Family / Group Name</label>
+              <input
+                id="new-guest-family"
+                v-model="newGuest.familyName"
+                type="text"
+                class="form-input"
+                placeholder="e.g. Murthy Clan"
+              />
             </div>
 
             <div class="form-group">
-              <label class="form-label">Category Group</label>
-              <select v-model="newGuest.category" class="form-select">
+              <label class="form-label" for="new-guest-category">Category Group</label>
+              <select id="new-guest-category" v-model="newGuest.category" class="form-select">
                 <option value="Bride Family">Bride Family</option>
                 <option value="Groom Family">Groom Family</option>
                 <option value="Friends">Friends</option>
@@ -365,13 +418,13 @@ function exportCSV() {
 
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px">
             <div class="form-group">
-              <label class="form-label">Party Size (Number of Pax)</label>
-              <input v-model.number="newGuest.partySize" type="number" min="1" class="form-input" />
+              <label class="form-label" for="new-guest-partysize">Party Size (Number of Pax)</label>
+              <input id="new-guest-partysize" v-model.number="newGuest.partySize" type="number" min="1" class="form-input" />
             </div>
 
             <div class="form-group">
-              <label class="form-label">RSVP Status</label>
-              <select v-model="newGuest.rsvpStatus" class="form-select">
+              <label class="form-label" for="new-guest-rsvp">RSVP Status</label>
+              <select id="new-guest-rsvp" v-model="newGuest.rsvpStatus" class="form-select">
                 <option value="confirmed">Confirmed</option>
                 <option value="pending">Pending</option>
                 <option value="declined">Declined</option>
@@ -381,13 +434,13 @@ function exportCSV() {
 
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px">
             <div class="form-group">
-              <label class="form-label">Mobile Number</label>
-              <input v-model="newGuest.mobileNumber" type="text" class="form-input" placeholder="+91 98450 00000" />
+              <label class="form-label" for="new-guest-phone">Mobile Number</label>
+              <input id="new-guest-phone" v-model="newGuest.mobileNumber" type="text" class="form-input" placeholder="+91 98450 00000" />
             </div>
 
             <div class="form-group">
-              <label class="form-label">Meal Preference</label>
-              <select v-model="newGuest.mealPreference" class="form-select">
+              <label class="form-label" for="new-guest-meal">Meal Preference</label>
+              <select id="new-guest-meal" v-model="newGuest.mealPreference" class="form-select">
                 <option value="Veg">Vegetarian</option>
                 <option value="Non-Veg">Non-Vegetarian</option>
                 <option value="Jain">Strict Jain</option>
@@ -398,15 +451,25 @@ function exportCSV() {
 
           <div class="form-group">
             <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 0.9rem">
-              <input v-model="newGuest.accommodationRequired" type="checkbox" style="width: 18px; height: 18px" />
+              <input
+                id="new-guest-hotel"
+                v-model="newGuest.accommodationRequired"
+                type="checkbox"
+                style="width: 18px; height: 18px"
+              />
               <span>Requires Hotel Room Booking / Outstation Stay</span>
             </label>
           </div>
 
           <div class="form-group">
-            <label class="form-label">Special Notes or Flight Timings</label>
-            <textarea v-model="newGuest.notes" rows="2" class="form-textarea"
-              placeholder="e.g. Arriving Bangalore airport at 11 AM, needs ground floor room..."></textarea>
+            <label class="form-label" for="new-guest-notes">Special Notes or Flight Timings</label>
+            <textarea
+              id="new-guest-notes"
+              v-model="newGuest.notes"
+              rows="2"
+              class="form-textarea"
+              placeholder="e.g. Arriving Bangalore airport at 11 AM, needs ground floor room..."
+            ></textarea>
           </div>
         </div>
 

@@ -67,6 +67,9 @@ function handlePopState() {
 
 <template>
   <div class="app-container">
+    <!-- Accessible Skip to Main Content Link (WCAG 2.4.1) -->
+    <a href="#main-content" class="skip-to-content">Skip to main content</a>
+
     <!-- Desktop & Tablet Sidebar / Mobile Drawer (Visible when signed in) -->
     <Sidebar v-if="authState.user && !state.publicRunSheetEventId" />
 
@@ -81,7 +84,12 @@ function handlePopState() {
       <Navbar v-if="!state.publicRunSheetEventId" />
 
       <!-- Active Content View Area -->
-      <main class="content-body" :style="state.publicRunSheetEventId ? 'padding: 0' : ''">
+      <main
+        id="main-content"
+        class="content-body"
+        tabindex="-1"
+        :style="state.publicRunSheetEventId ? 'padding: 0' : ''"
+      >
         <!-- Dedicated Public Event Run Sheet (Direct shareable link for all attendees without login) -->
         <PublicRunSheetView
           v-if="state.publicRunSheetEventId"
@@ -107,10 +115,16 @@ function handlePopState() {
       </main>
 
       <!-- Mobile Bottom Navigation Bar (Visible only on screens <= 768px, hidden in public runsheet view) -->
-      <nav v-if="!state.publicRunSheetEventId" class="mobile-bottom-nav">
+      <nav
+        v-if="!state.publicRunSheetEventId"
+        class="mobile-bottom-nav"
+        aria-label="Mobile Navigation"
+      >
         <template v-if="!authState.user">
           <button
             class="bottom-nav-btn active"
+            aria-current="page"
+            aria-label="Go to Home dashboard"
             @click="actions.setActiveTab('dashboard')"
           >
             <LayoutDashboard :size="18" />
@@ -119,6 +133,7 @@ function handlePopState() {
 
           <button
             class="bottom-nav-btn"
+            aria-label="Sign In or Register"
             @click="authActions.openAuthModal('signin')"
           >
             <LogIn :size="18" />
@@ -130,6 +145,8 @@ function handlePopState() {
           <button
             class="bottom-nav-btn"
             :class="{ active: state.activeTab === 'dashboard' }"
+            :aria-current="state.activeTab === 'dashboard' ? 'page' : undefined"
+            aria-label="Dashboard overview"
             @click="actions.setActiveTab('dashboard')"
           >
             <LayoutDashboard :size="18" />
@@ -139,6 +156,8 @@ function handlePopState() {
           <button
             class="bottom-nav-btn"
             :class="{ active: state.activeTab === 'events' }"
+            :aria-current="state.activeTab === 'events' ? 'page' : undefined"
+            aria-label="My events list"
             @click="actions.setActiveTab('events')"
           >
             <CalendarDays :size="18" />
@@ -148,6 +167,8 @@ function handlePopState() {
           <button
             class="bottom-nav-btn"
             :class="{ active: state.activeTab === 'checklist' }"
+            :aria-current="state.activeTab === 'checklist' ? 'page' : undefined"
+            aria-label="Planning checklist and tasks"
             @click="actions.setActiveTab('checklist')"
             style="position: relative"
           >
@@ -155,6 +176,7 @@ function handlePopState() {
             <span>Tasks</span>
             <span
               v-if="taskMetrics.overdue > 0"
+              aria-hidden="true"
               style="
                 position: absolute;
                 top: 4px;
@@ -165,11 +187,16 @@ function handlePopState() {
                 background: var(--danger);
               "
             ></span>
+            <span v-if="taskMetrics.overdue > 0" class="sr-only">
+              ({{ taskMetrics.overdue }} overdue)
+            </span>
           </button>
 
           <button
             class="bottom-nav-btn"
             :class="{ active: state.activeTab === 'budget' }"
+            :aria-current="state.activeTab === 'budget' ? 'page' : undefined"
+            aria-label="Budget and expenses"
             @click="actions.setActiveTab('budget')"
           >
             <Wallet :size="18" />
@@ -178,6 +205,7 @@ function handlePopState() {
 
           <button
             class="bottom-nav-btn"
+            aria-label="Open mobile navigation menu"
             @click="actions.toggleMobileMenu()"
           >
             <MoreHorizontal :size="18" />

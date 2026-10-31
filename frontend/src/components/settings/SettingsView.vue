@@ -89,9 +89,11 @@ function handleClearData() {
 
       <div style="display: flex; flex-direction: column; gap: 14px">
         <div class="form-group">
-          <label class="form-label">Active Event Currency</label>
+          <label class="form-label" for="active-event-currency">Active Event Currency</label>
           <select
+            id="active-event-currency"
             class="form-select"
+            aria-label="Active Event Currency"
             :value="currentEvent?.currency || 'INR'"
             @change="(e) => { if (currentEvent) currentEvent.currency = (e.target as HTMLSelectElement).value }"
           >
@@ -110,7 +112,7 @@ function handleClearData() {
     <div class="card">
       <div class="card-header">
         <div class="card-title">
-          <Database :size="18" style="color: var(--primary)" />
+          <Database :size="18" style="color: var(--primary)" aria-hidden="true" />
           <span>Workspace Storage & Cache</span>
         </div>
       </div>
@@ -122,17 +124,19 @@ function handleClearData() {
       <div style="display: flex; gap: 12px; flex-wrap: wrap">
         <button
           class="btn btn-secondary"
+          aria-label="Reset workspace to default celebration data"
           @click="handleReset"
         >
-          <RotateCcw :size="16" />
+          <RotateCcw :size="16" aria-hidden="true" />
           <span>Reset Workspace Data</span>
         </button>
         <button
           class="btn btn-secondary"
+          aria-label="Clear all local workspace data"
           style="border-color: var(--danger); color: var(--danger)"
           @click="handleClearData"
         >
-          <Trash2 :size="16" />
+          <Trash2 :size="16" aria-hidden="true" />
           <span>Clear Local Workspace</span>
         </button>
       </div>

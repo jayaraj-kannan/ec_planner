@@ -98,7 +98,15 @@ function onToggleTask(taskId: string) {
             <span>Readiness</span>
             <strong>{{ readinessMetrics.readinessScore }}%</strong>
           </div>
-          <div class="progress-track" style="height: 5px; width: 100px; background: rgba(255,255,255,0.25)">
+          <div
+            class="progress-track"
+            role="progressbar"
+            :aria-valuenow="readinessMetrics.readinessScore"
+            aria-valuemin="0"
+            aria-valuemax="100"
+            :aria-label="'Readiness score: ' + readinessMetrics.readinessScore + '%'"
+            style="height: 5px; width: 100px; background: rgba(255,255,255,0.25)"
+          >
             <div
               class="progress-fill"
               style="background: #34D399"
@@ -115,7 +123,15 @@ function onToggleTask(taskId: string) {
     <!-- The 5 Core Questions Grid (Compact 2x2 on Mobile, 4-col on Desktop) -->
     <div class="stats-grid">
       <!-- Q2: How much have I spent, and how much budget remains? -->
-      <div class="card stat-card" @click="actions.setActiveTab('budget')">
+      <div
+        class="card stat-card"
+        role="button"
+        tabindex="0"
+        :aria-label="'View Budget details: ' + formatCurrency(budgetMetrics.remainingBudgetMinor, budgetMetrics.currency) + ' remaining buffer'"
+        @click="actions.setActiveTab('budget')"
+        @keydown.enter="actions.setActiveTab('budget')"
+        @keydown.space.prevent="actions.setActiveTab('budget')"
+      >
         <div class="stat-top">
           <div>
             <div class="stat-label">Q2: Budget Health</div>
@@ -124,7 +140,7 @@ function onToggleTask(taskId: string) {
             </div>
             <div class="stat-sub">Remaining buffer</div>
           </div>
-          <div class="stat-icon-box bg-primary-subtle">
+          <div class="stat-icon-box bg-primary-subtle" aria-hidden="true">
             <Wallet :size="16" />
           </div>
         </div>
@@ -134,7 +150,14 @@ function onToggleTask(taskId: string) {
             <span>Spent: {{ formatCurrency(budgetMetrics.actualSpentMinor, budgetMetrics.currency) }}</span>
             <strong>{{ budgetMetrics.spendPercent }}%</strong>
           </div>
-          <div class="progress-track">
+          <div
+            class="progress-track"
+            role="progressbar"
+            :aria-valuenow="budgetMetrics.spendPercent"
+            aria-valuemin="0"
+            aria-valuemax="100"
+            :aria-label="'Budget spent: ' + budgetMetrics.spendPercent + '%'"
+          >
             <div class="progress-fill primary" :style="{ width: budgetMetrics.spendPercent + '%' }"></div>
           </div>
           <div class="stat-extra">
@@ -144,7 +167,15 @@ function onToggleTask(taskId: string) {
       </div>
 
       <!-- Q3: Which tasks are overdue or still pending? -->
-      <div class="card stat-card" @click="actions.setActiveTab('checklist')">
+      <div
+        class="card stat-card"
+        role="button"
+        tabindex="0"
+        :aria-label="'View Tasks: ' + taskMetrics.pending + ' pending, ' + taskMetrics.overdue + ' overdue'"
+        @click="actions.setActiveTab('checklist')"
+        @keydown.enter="actions.setActiveTab('checklist')"
+        @keydown.space.prevent="actions.setActiveTab('checklist')"
+      >
         <div class="stat-top">
           <div>
             <div class="stat-label">Q3: Tasks Status</div>
@@ -153,7 +184,7 @@ function onToggleTask(taskId: string) {
             </div>
             <div class="stat-sub">{{ taskMetrics.completed }} / {{ taskMetrics.total }} Done</div>
           </div>
-          <div class="stat-icon-box bg-warning-subtle">
+          <div class="stat-icon-box bg-warning-subtle" aria-hidden="true">
             <AlertCircle :size="16" />
           </div>
         </div>
@@ -167,7 +198,15 @@ function onToggleTask(taskId: string) {
               {{ taskMetrics.pending }} Pending
             </span>
           </div>
-          <div class="progress-track" style="margin-top: 6px">
+          <div
+            class="progress-track"
+            role="progressbar"
+            :aria-valuenow="taskMetrics.completionPercent"
+            aria-valuemin="0"
+            aria-valuemax="100"
+            :aria-label="'Checklist progress: ' + taskMetrics.completionPercent + '%'"
+            style="margin-top: 6px"
+          >
             <div class="progress-fill warning" :style="{ width: taskMetrics.completionPercent + '%' }"></div>
           </div>
           <div class="stat-extra">
@@ -177,7 +216,15 @@ function onToggleTask(taskId: string) {
       </div>
 
       <!-- Q4: Who has confirmed attendance? -->
-      <div class="card stat-card" @click="actions.setActiveTab('guests')">
+      <div
+        class="card stat-card"
+        role="button"
+        tabindex="0"
+        :aria-label="'View Guests: ' + guestMetrics.confirmedPax + ' confirmed of ' + guestMetrics.totalInvitedPax + ' invited'"
+        @click="actions.setActiveTab('guests')"
+        @keydown.enter="actions.setActiveTab('guests')"
+        @keydown.space.prevent="actions.setActiveTab('guests')"
+      >
         <div class="stat-top">
           <div>
             <div class="stat-label">Q4: Guest RSVPs</div>
@@ -186,7 +233,7 @@ function onToggleTask(taskId: string) {
             </div>
             <div class="stat-sub">of {{ guestMetrics.totalInvitedPax }} Pax invited</div>
           </div>
-          <div class="stat-icon-box bg-success-subtle">
+          <div class="stat-icon-box bg-success-subtle" aria-hidden="true">
             <Users :size="16" />
           </div>
         </div>
@@ -196,7 +243,14 @@ function onToggleTask(taskId: string) {
             <span>Pending: {{ guestMetrics.pendingPax }}</span>
             <strong style="color: var(--success)">{{ guestMetrics.confirmedPercent }}%</strong>
           </div>
-          <div class="progress-track">
+          <div
+            class="progress-track"
+            role="progressbar"
+            :aria-valuenow="guestMetrics.confirmedPercent"
+            aria-valuemin="0"
+            aria-valuemax="100"
+            :aria-label="'Guest confirmation: ' + guestMetrics.confirmedPercent + '%'"
+          >
             <div class="progress-fill success" :style="{ width: guestMetrics.confirmedPercent + '%' }"></div>
           </div>
           <div class="stat-extra">
@@ -206,7 +260,15 @@ function onToggleTask(taskId: string) {
       </div>
 
       <!-- Q5: Am I ready for the event day? -->
-      <div class="card stat-card" @click="actions.openRunSheetLiveModal()">
+      <div
+        class="card stat-card"
+        role="button"
+        tabindex="0"
+        aria-label="Open Event Day Live Coordinator Run Sheet"
+        @click="actions.openRunSheetLiveModal()"
+        @keydown.enter="actions.openRunSheetLiveModal()"
+        @keydown.space.prevent="actions.openRunSheetLiveModal()"
+      >
         <div class="stat-top">
           <div>
             <div class="stat-label">Q5: Event Day Run Sheet</div>
@@ -215,7 +277,7 @@ function onToggleTask(taskId: string) {
             </div>
             <div class="stat-sub">{{ readinessMetrics.readyArrangements }}/{{ readinessMetrics.totalArrangements }} Setups Ready</div>
           </div>
-          <div class="stat-icon-box bg-info-subtle">
+          <div class="stat-icon-box bg-info-subtle" aria-hidden="true">
             <PlayCircle :size="16" />
           </div>
         </div>
@@ -223,9 +285,10 @@ function onToggleTask(taskId: string) {
         <div class="stat-bottom">
           <button
             class="btn btn-outline btn-sm run-sheet-quick-btn"
+            aria-label="Open Live Run Sheet Coordinator View"
             @click.stop="actions.openRunSheetLiveModal()"
           >
-            <PlayCircle :size="13" />
+            <PlayCircle :size="13" aria-hidden="true" />
             <span>Open Coordinator View</span>
           </button>
         </div>

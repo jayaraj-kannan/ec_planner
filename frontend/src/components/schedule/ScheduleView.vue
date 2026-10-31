@@ -347,15 +347,26 @@ function markCompleted(actId: string) {
 
               <!-- Quick action buttons -->
               <div style="display: flex; gap: 8px">
-                <button v-if="act.status !== 'completed'" class="btn btn-secondary btn-sm" style="font-size: 0.75rem"
-                  @click="quickDelay(act.id, 15)" title="Push schedule back by 15 mins">
-                  <FastForward :size="13" />
+                <button
+                  v-if="act.status !== 'completed'"
+                  class="btn btn-secondary btn-sm"
+                  style="font-size: 0.75rem"
+                  :aria-label="'Report 15 minute delay for ' + act.activityName"
+                  @click="quickDelay(act.id, 15)"
+                  title="Push schedule back by 15 mins"
+                >
+                  <FastForward :size="13" aria-hidden="true" />
                   <span>+15m Delay</span>
                 </button>
 
-                <button v-if="act.status !== 'completed'" class="btn btn-outline btn-sm" style="font-size: 0.75rem"
-                  @click="markCompleted(act.id)">
-                  <CheckCircle2 :size="13" />
+                <button
+                  v-if="act.status !== 'completed'"
+                  class="btn btn-outline btn-sm"
+                  style="font-size: 0.75rem"
+                  :aria-label="'Mark ' + act.activityName + ' as completed'"
+                  @click="markCompleted(act.id)"
+                >
+                  <CheckCircle2 :size="13" aria-hidden="true" />
                   <span>Mark Done</span>
                 </button>
               </div>
@@ -365,16 +376,20 @@ function markCompleted(actId: string) {
             <div
               style="display: flex; flex-wrap: wrap; gap: 16px; font-size: 0.82rem; color: var(--text-muted); margin-top: 10px">
               <div style="display: flex; align-items: center; gap: 6px">
-                <MapPin :size="14" style="color: var(--primary)" />
+                <MapPin :size="14" style="color: var(--primary)" aria-hidden="true" />
                 <span>{{ act.location }}</span>
               </div>
               <div style="display: flex; align-items: center; gap: 6px">
-                <User :size="14" style="color: var(--primary)" />
+                <User :size="14" style="color: var(--primary)" aria-hidden="true" />
                 <span>Lead: <strong>{{ act.responsiblePerson }}</strong></span>
               </div>
               <div style="display: flex; align-items: center; gap: 6px">
-                <Phone :size="14" style="color: var(--primary)" />
-                <a :href="'tel:' + act.phone" style="color: inherit; font-weight: 600">{{ act.phone }}</a>
+                <Phone :size="14" style="color: var(--primary)" aria-hidden="true" />
+                <a
+                  :href="'tel:' + act.phone"
+                  :aria-label="'Call ' + act.responsiblePerson + ' at ' + act.phone"
+                  style="color: inherit; font-weight: 600"
+                >{{ act.phone }}</a>
               </div>
             </div>
 
@@ -388,56 +403,95 @@ function markCompleted(actId: string) {
     </div>
 
     <!-- Add Activity Modal -->
-    <div v-if="isAddActivityModalOpen" class="modal-overlay" @click.self="isAddActivityModalOpen = false">
-      <div class="modal-box">
+    <div
+      v-if="isAddActivityModalOpen"
+      class="modal-overlay"
+      @click.self="isAddActivityModalOpen = false"
+      @keydown.esc="isAddActivityModalOpen = false"
+    >
+      <div
+        class="modal-box"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="add-activity-modal-title"
+      >
         <div class="modal-header">
-          <h3 style="font-size: 1.15rem">Add Ceremony or Activity to Run Sheet</h3>
-          <button class="btn-icon" @click="isAddActivityModalOpen = false">
-            <X :size="18" />
+          <h3 id="add-activity-modal-title" style="font-size: 1.15rem">Add Ceremony or Activity to Run Sheet</h3>
+          <button
+            class="btn-icon"
+            aria-label="Close add activity modal"
+            @click="isAddActivityModalOpen = false"
+          >
+            <X :size="18" aria-hidden="true" />
           </button>
         </div>
 
         <div class="modal-body">
           <div class="form-group">
-            <label class="form-label">Activity / Ceremony Name</label>
-            <input v-model="newActivity.activityName" type="text" class="form-input"
-              placeholder="e.g. Grand Entrance & Varmala" />
+            <label class="form-label" for="new-activity-name">Activity / Ceremony Name</label>
+            <input
+              id="new-activity-name"
+              v-model="newActivity.activityName"
+              type="text"
+              class="form-input"
+              placeholder="e.g. Grand Entrance & Varmala"
+            />
           </div>
 
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px">
             <div class="form-group">
-              <label class="form-label">Start Time</label>
-              <input v-model="newActivity.startTime" type="time" class="form-input" />
+              <label class="form-label" for="new-activity-start">Start Time</label>
+              <input id="new-activity-start" v-model="newActivity.startTime" type="time" class="form-input" />
             </div>
 
             <div class="form-group">
-              <label class="form-label">End Time</label>
-              <input v-model="newActivity.endTime" type="time" class="form-input" />
+              <label class="form-label" for="new-activity-end">End Time</label>
+              <input id="new-activity-end" v-model="newActivity.endTime" type="time" class="form-input" />
             </div>
           </div>
 
           <div class="form-group">
-            <label class="form-label">Location / Hall Section</label>
-            <input v-model="newActivity.location" type="text" class="form-input"
-              placeholder="e.g. Lawn Garden Pavilion" />
+            <label class="form-label" for="new-activity-location">Location / Hall Section</label>
+            <input
+              id="new-activity-location"
+              v-model="newActivity.location"
+              type="text"
+              class="form-input"
+              placeholder="e.g. Lawn Garden Pavilion"
+            />
           </div>
 
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px">
             <div class="form-group">
-              <label class="form-label">Responsible Lead Person</label>
-              <input v-model="newActivity.responsiblePerson" type="text" class="form-input"
-                placeholder="e.g. Ananya (Sister)" />
+              <label class="form-label" for="new-activity-lead">Responsible Lead Person</label>
+              <input
+                id="new-activity-lead"
+                v-model="newActivity.responsiblePerson"
+                type="text"
+                class="form-input"
+                placeholder="e.g. Ananya (Sister)"
+              />
             </div>
 
             <div class="form-group">
-              <label class="form-label">Lead Phone Number</label>
-              <input v-model="newActivity.phone" type="text" class="form-input" placeholder="+91 98450 00000" />
+              <label class="form-label" for="new-activity-phone">Lead Phone Number</label>
+              <input
+                id="new-activity-phone"
+                v-model="newActivity.phone"
+                type="text"
+                class="form-input"
+                placeholder="+91 98450 00000"
+              />
             </div>
           </div>
 
           <div class="form-group">
-            <label class="form-label">Key Cues or Instructions</label>
-            <textarea v-model="newActivity.notes" rows="2" class="form-textarea"
+            <label class="form-label" for="new-activity-notes">Key Cues or Instructions</label>
+            <textarea
+              id="new-activity-notes"
+              v-model="newActivity.notes"
+              rows="2"
+              class="form-textarea"
               placeholder="e.g. Sparkular fireworks to ignite right as the bride reaches mandap..."></textarea>
           </div>
         </div>

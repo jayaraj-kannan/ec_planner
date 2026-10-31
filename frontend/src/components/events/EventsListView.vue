@@ -158,21 +158,34 @@ function confirmDeleteEvent() {
         <!-- Action button -->
         <div class="event-card-footer"
           style="padding-top: 14px; border-top: 1px solid var(--surface-border); display: flex; justify-content: space-between; align-items: center; gap: 8px">
-          <button class="btn btn-outline-danger btn-sm btn-delete-event" title="Delete this celebration"
-            @click.stop="promptDeleteEvent(evt)">
-            <Trash2 :size="14" />
+          <button
+            class="btn btn-outline-danger btn-sm btn-delete-event"
+            title="Delete this celebration"
+            :aria-label="'Delete celebration ' + evt.name"
+            @click.stop="promptDeleteEvent(evt)"
+          >
+            <Trash2 :size="14" aria-hidden="true" />
             <span>Delete</span>
           </button>
 
           <div style="display: flex; align-items: center; gap: 8px">
-            <button v-if="evt.id === state.activeEventId" class="btn btn-outline btn-sm"
-              @click="actions.setActiveTab('dashboard')">
+            <button
+              v-if="evt.id === state.activeEventId"
+              class="btn btn-outline btn-sm"
+              :aria-label="'Open Dashboard for ' + evt.name"
+              @click="actions.setActiveTab('dashboard')"
+            >
               <span>Open Dashboard</span>
-              <ArrowRight :size="14" />
+              <ArrowRight :size="14" aria-hidden="true" />
             </button>
-            <button v-else class="btn btn-primary btn-sm" @click="switchEvent(evt.id)">
+            <button
+              v-else
+              class="btn btn-primary btn-sm"
+              :aria-label="'Switch to ' + evt.name"
+              @click="switchEvent(evt.id)"
+            >
               <span>Switch to Event</span>
-              <ArrowRight :size="14" />
+              <ArrowRight :size="14" aria-hidden="true" />
             </button>
           </div>
         </div>
@@ -180,9 +193,20 @@ function confirmDeleteEvent() {
     </div>
 
     <!-- Delete Confirmation Modal -->
-    <div v-if="isDeleteModalOpen && eventToDelete" class="modal-overlay delete-modal-overlay"
-      @click.self="closeDeleteModal">
-      <div class="modal-box delete-confirm-box" style="max-width: 480px">
+    <div
+      v-if="isDeleteModalOpen && eventToDelete"
+      class="modal-overlay delete-modal-overlay"
+      @click.self="closeDeleteModal"
+      @keydown.esc="closeDeleteModal"
+    >
+      <div
+        class="modal-box delete-confirm-box"
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="delete-event-modal-title"
+        aria-describedby="delete-event-modal-desc"
+        style="max-width: 480px"
+      >
         <div class="modal-header" style="border-bottom: 1px solid var(--danger-border); background: var(--danger-bg)">
           <div style="display: flex; align-items: center; gap: 10px; color: var(--danger)">
             <div style="
@@ -195,11 +219,13 @@ function confirmDeleteEvent() {
                 align-items: center;
                 justify-content: center;
                 box-shadow: var(--shadow-sm);
-              ">
+              "
+              aria-hidden="true"
+            >
               <AlertTriangle :size="18" style="color: var(--danger)" />
             </div>
             <div>
-              <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--danger); margin: 0">
+              <h3 id="delete-event-modal-title" style="font-size: 1.1rem; font-weight: 700; color: var(--danger); margin: 0">
                 Delete Celebration?
               </h3>
               <span style="font-size: 0.75rem; color: #991B1B">
@@ -208,13 +234,18 @@ function confirmDeleteEvent() {
             </div>
           </div>
 
-          <button class="btn-icon btn-close-delete-modal" @click="closeDeleteModal" title="Cancel">
-            <X :size="18" />
+          <button
+            class="btn-icon btn-close-delete-modal"
+            aria-label="Cancel and close delete dialog"
+            @click="closeDeleteModal"
+            title="Cancel"
+          >
+            <X :size="18" aria-hidden="true" />
           </button>
         </div>
 
         <div class="modal-body" style="padding: 20px 22px; display: flex; flex-direction: column; gap: 16px">
-          <p style="font-size: 0.9rem; color: var(--text-main); line-height: 1.5; margin: 0">
+          <p id="delete-event-modal-desc" style="font-size: 0.9rem; color: var(--text-main); line-height: 1.5; margin: 0">
             Are you sure you want to permanently delete
             <strong style="color: var(--text-main)">"{{ eventToDelete.name }}"</strong>?
           </p>

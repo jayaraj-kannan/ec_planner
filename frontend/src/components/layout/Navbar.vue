@@ -58,15 +58,18 @@ function onSelectEvent(e: Event) {
           class="btn-icon mobile-menu-btn"
           @click="actions.toggleMobileMenu()"
           aria-label="Open Navigation Menu"
+          :aria-expanded="state.isMobileMenuOpen"
         >
           <Menu :size="20" />
         </button>
 
         <!-- Event Switcher Dropdown -->
         <div class="event-selector-box">
-          <Calendar :size="16" style="color: var(--primary); flex-shrink: 0" />
+          <Calendar :size="16" style="color: var(--primary); flex-shrink: 0" aria-hidden="true" />
           <select
+            id="active-event-selector"
             class="event-select-dropdown"
+            aria-label="Select active event"
             :value="state.activeEventId"
             @change="onSelectEvent"
           >
@@ -78,13 +81,14 @@ function onSelectEvent(e: Event) {
               {{ evt.name }} ({{ evt.eventType.toUpperCase() }})
             </option>
           </select>
-          <ChevronDown :size="12" style="color: var(--text-muted); flex-shrink: 0" />
+          <ChevronDown :size="12" style="color: var(--text-muted); flex-shrink: 0" aria-hidden="true" />
         </div>
 
         <!-- Quick Countdown Badge (compact on mobile) -->
         <span class="badge badge-info nav-countdown-badge" style="font-weight: 700">
           ⏳ {{ readinessMetrics.daysUntil }}d
           <span class="countdown-label-full">to go</span>
+          <span class="sr-only">({{ readinessMetrics.daysUntil }} days until event)</span>
         </span>
       </template>
     </div>
@@ -97,8 +101,9 @@ function onSelectEvent(e: Event) {
           class="btn btn-outline btn-sm nav-btn-compact"
           @click="actions.openRunSheetLiveModal()"
           title="Open Live Event-Day Run Sheet"
+          aria-label="Open Live Event-Day Run Sheet"
         >
-          <PlayCircle :size="14" />
+          <PlayCircle :size="14" aria-hidden="true" />
           <span class="btn-text-responsive">Run Sheet</span>
         </button>
 
@@ -108,8 +113,9 @@ function onSelectEvent(e: Event) {
           style="background: linear-gradient(135deg, #FF6082 0%, #B26CFF 100%); color: white; border: none; font-weight: 700; text-shadow: 0 1px 2px rgba(90, 10, 50, 0.25); box-shadow: 0 2px 6px rgba(255, 96, 130, 0.35)"
           @click="actions.openAgentChatModal()"
           title="Open PlanCraft ADK AI Assistant"
+          aria-label="Open PlanCraft ADK AI Assistant"
         >
-          <Sparkles :size="14" />
+          <Sparkles :size="14" aria-hidden="true" />
           <span class="btn-text-responsive">AI Copilot</span>
         </button>
 
@@ -117,32 +123,46 @@ function onSelectEvent(e: Event) {
         <button
           class="btn btn-primary btn-sm nav-btn-compact"
           @click="actions.openCreateEventModal()"
+          aria-label="Create new celebration event"
         >
-          <Plus :size="14" />
+          <Plus :size="14" aria-hidden="true" />
           <span class="btn-text-responsive">Create</span>
         </button>
 
         <!-- User Profile / Auth Button -->
         <div class="nav-user-chip">
-          <img v-if="authState.profile?.photoURL" :src="authState.profile.photoURL" class="nav-avatar-img" alt="avatar" />
-          <div v-else class="nav-avatar-fallback">{{ (authState.profile?.displayName || 'Host').slice(0, 2).toUpperCase() }}</div>
+          <img
+            v-if="authState.profile?.photoURL"
+            :src="authState.profile.photoURL"
+            class="nav-avatar-img"
+            :alt="authState.profile?.displayName ? authState.profile.displayName + ' profile avatar' : 'User profile avatar'"
+          />
+          <div v-else class="nav-avatar-fallback" aria-hidden="true">{{ (authState.profile?.displayName || 'Host').slice(0, 2).toUpperCase() }}</div>
           <span class="nav-user-name btn-text-responsive">{{ authState.profile?.displayName || authState.user.email?.split('@')[0] }}</span>
-          <button class="btn-icon btn-logout" @click="authActions.logout()" title="Sign Out">
-            <LogOut :size="13" />
+          <button
+            class="btn-icon btn-logout"
+            @click="authActions.logout()"
+            title="Sign Out"
+            aria-label="Sign out of account"
+          >
+            <LogOut :size="13" aria-hidden="true" />
           </button>
         </div>
 
         <!-- Notification Center Popover -->
-        <div style="position: relative">
+        <div style="position: relative" @keydown.esc="isNotifOpen = false">
         <button
           class="btn-icon"
           @click="toggleNotif"
           style="position: relative"
           aria-label="Notifications"
+          :aria-expanded="isNotifOpen"
+          aria-haspopup="dialog"
         >
-          <Bell :size="17" />
+          <Bell :size="17" aria-hidden="true" />
           <span
             v-if="unreadCount() > 0"
+            aria-hidden="true"
             style="
               position: absolute;
               top: 5px;
@@ -154,11 +174,17 @@ function onSelectEvent(e: Event) {
               border: 1.5px solid white;
             "
           ></span>
+          <span v-if="unreadCount() > 0" class="sr-only">
+            ({{ unreadCount() }} unread)
+          </span>
         </button>
 
         <!-- Dropdown Menu -->
         <div
           v-if="isNotifOpen"
+          role="dialog"
+          aria-modal="false"
+          aria-label="Notifications center"
           style="
             position: absolute;
             top: 42px;
@@ -187,21 +213,30 @@ function onSelectEvent(e: Event) {
             <span style="font-weight: 700; font-size: 0.85rem">Notifications</span>
             <button
               style="font-size: 0.72rem; color: var(--primary); font-weight: 600"
+              aria-label="Mark all notifications as read"
               @click="actions.markAllNotificationsRead()"
             >
               Mark all read
             </button>
           </div>
 
-          <div style="display: flex; flex-direction: column; gap: 8px; max-height: 260px; overflow-y: auto">
+          <div
+            style="display: flex; flex-direction: column; gap: 8px; max-height: 260px; overflow-y: auto"
+            role="list"
+            aria-label="Notification items"
+          >
             <div
               v-for="n in state.notifications"
               :key="n.id"
+              role="listitem"
+              tabindex="0"
+              :aria-label="n.title + ': ' + n.message"
               style="
                 padding: 8px 10px;
                 border-radius: var(--radius-sm);
                 background-color: var(--surface-subtle);
                 border-left: 3px solid;
+                cursor: pointer;
               "
               :style="{
                 borderLeftColor:
@@ -212,6 +247,7 @@ function onSelectEvent(e: Event) {
                     : 'var(--warning)',
               }"
               @click="actions.markNotificationRead(n.id)"
+              @keydown.enter="actions.markNotificationRead(n.id)"
             >
               <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-main); margin-bottom: 2px">
                 {{ n.title }}
@@ -234,8 +270,9 @@ function onSelectEvent(e: Event) {
         class="btn btn-primary btn-sm nav-btn-compact btn-signin"
         @click="authActions.openAuthModal('signin')"
         title="Sign in with Google or Email"
+        aria-label="Sign in with Google or Email"
       >
-        <LogIn :size="14" />
+        <LogIn :size="14" aria-hidden="true" />
         <span class="btn-text-responsive">Sign In</span>
       </button>
     </div>

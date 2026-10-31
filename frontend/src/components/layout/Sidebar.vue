@@ -63,10 +63,10 @@ function setTab(tab: ActiveTab) {
 
 <template>
   <!-- Desktop / Tablet Sticky Sidebar -->
-  <aside class="sidebar">
+  <aside class="sidebar" aria-label="Desktop Sidebar Navigation">
     <!-- Brand / Logo -->
     <div class="sidebar-header">
-      <div class="logo-badge">
+      <div class="logo-badge" aria-hidden="true">
         <PartyPopper :size="18" />
       </div>
       <div class="logo-text">
@@ -76,7 +76,7 @@ function setTab(tab: ActiveTab) {
     </div>
 
     <!-- Navigation List -->
-    <nav class="sidebar-nav">
+    <nav class="sidebar-nav" aria-label="Main Navigation">
       <div class="nav-section-title">Navigation</div>
 
       <button
@@ -84,10 +84,11 @@ function setTab(tab: ActiveTab) {
         :key="item.id"
         class="nav-item"
         :class="{ active: state.activeTab === item.id }"
+        :aria-current="state.activeTab === item.id ? 'page' : undefined"
         @click="setTab(item.id)"
       >
         <div class="nav-item-left">
-          <component :is="item.icon" :size="16" />
+          <component :is="item.icon" :size="16" aria-hidden="true" />
           <span>{{ item.label }}</span>
         </div>
         <span
@@ -96,6 +97,7 @@ function setTab(tab: ActiveTab) {
           :class="item.badgeType || 'primary'"
         >
           {{ item.badge }}
+          <span class="sr-only">({{ item.badge }} overdue)</span>
         </span>
       </button>
 
@@ -104,10 +106,11 @@ function setTab(tab: ActiveTab) {
       <button
         class="nav-item"
         :class="{ active: state.activeTab === 'settings' }"
+        :aria-current="state.activeTab === 'settings' ? 'page' : undefined"
         @click="setTab('settings')"
       >
         <div class="nav-item-left">
-          <Settings :size="16" />
+          <Settings :size="16" aria-hidden="true" />
           <span>Settings</span>
         </div>
       </button>
@@ -118,9 +121,10 @@ function setTab(tab: ActiveTab) {
       <button
         class="btn"
         style="width: 100%; font-size: 0.8rem; padding: 8px 10px; background: #FFE4F6; color: #705EFF; border: 1px solid #E8C1F0; font-weight: 700"
+        aria-label="Open PlanCraft AI Copilot Assistant"
         @click="actions.openAgentChatModal()"
       >
-        <Sparkles :size="14" />
+        <Sparkles :size="14" aria-hidden="true" />
         <span>Ask AI Copilot</span>
       </button>
     </div>
@@ -130,9 +134,10 @@ function setTab(tab: ActiveTab) {
       <button
         class="btn btn-primary"
         style="width: 100%; font-size: 0.8rem; padding: 8px 10px;"
+        aria-label="Create new celebration event"
         @click="actions.openCreateEventModal()"
       >
-        <PartyPopper :size="14" />
+        <PartyPopper :size="14" aria-hidden="true" />
         <span>+ New Event</span>
       </button>
     </div>
@@ -143,11 +148,11 @@ function setTab(tab: ActiveTab) {
         <img
           v-if="authState.user.photoURL"
           :src="authState.user.photoURL"
-          alt="Avatar"
+          :alt="authState.profile?.displayName ? authState.profile.displayName + ' avatar' : 'User avatar'"
           class="avatar"
           style="object-fit: cover"
         />
-        <div v-else class="avatar">
+        <div v-else class="avatar" aria-hidden="true">
           {{ (authState.profile?.displayName || authState.user.email || 'U').slice(0, 2).toUpperCase() }}
         </div>
         <div style="flex: 1; overflow: hidden">
@@ -162,9 +167,10 @@ function setTab(tab: ActiveTab) {
           class="btn btn-ghost"
           style="padding: 4px; color: var(--text-muted)"
           title="Sign Out"
+          aria-label="Sign out of account"
           @click="authActions.logout()"
         >
-          <LogOut :size="14" />
+          <LogOut :size="14" aria-hidden="true" />
         </button>
       </div>
 
@@ -172,9 +178,10 @@ function setTab(tab: ActiveTab) {
         <button
           class="btn btn-secondary"
           style="width: 100%; font-size: 0.78rem; padding: 7px 10px; justify-content: center"
+          aria-label="Sign in or register an account"
           @click="authActions.openAuthModal('signin')"
         >
-          <LogIn :size="14" />
+          <LogIn :size="14" aria-hidden="true" />
           <span>Sign In / Register</span>
         </button>
       </div>
@@ -186,11 +193,18 @@ function setTab(tab: ActiveTab) {
     v-if="state.isMobileMenuOpen"
     class="mobile-drawer-overlay"
     @click="actions.closeMobileMenu()"
+    @keydown.esc="actions.closeMobileMenu()"
   >
-    <div class="mobile-drawer" @click.stop>
+    <div
+      class="mobile-drawer"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Mobile Navigation Drawer"
+      @click.stop
+    >
       <div class="sidebar-header" style="justify-content: space-between">
         <div style="display: flex; align-items: center; gap: 8px">
-          <div class="logo-badge">
+          <div class="logo-badge" aria-hidden="true">
             <PartyPopper :size="16" />
           </div>
           <div class="logo-text">
@@ -198,23 +212,28 @@ function setTab(tab: ActiveTab) {
             <span class="logo-subtitle">Event Planning OS</span>
           </div>
         </div>
-        <button class="btn-icon" @click="actions.closeMobileMenu()">
-          <X :size="18" />
+        <button
+          class="btn-icon"
+          aria-label="Close navigation menu"
+          @click="actions.closeMobileMenu()"
+        >
+          <X :size="18" aria-hidden="true" />
         </button>
       </div>
 
-      <nav class="sidebar-nav" style="padding: 12px">
+      <nav class="sidebar-nav" style="padding: 12px" aria-label="Mobile Navigation Links">
         <div class="nav-section-title">Navigation</div>
         <button
           v-for="item in navItems"
           :key="item.id"
           class="nav-item"
           :class="{ active: state.activeTab === item.id }"
+          :aria-current="state.activeTab === item.id ? 'page' : undefined"
           @click="setTab(item.id)"
           style="padding: 10px 12px; font-size: 0.9rem"
         >
           <div class="nav-item-left">
-            <component :is="item.icon" :size="18" />
+            <component :is="item.icon" :size="18" aria-hidden="true" />
             <span>{{ item.label }}</span>
           </div>
           <span
@@ -223,6 +242,7 @@ function setTab(tab: ActiveTab) {
             :class="item.badgeType || 'primary'"
           >
             {{ item.badge }}
+            <span class="sr-only">({{ item.badge }} overdue)</span>
           </span>
         </button>
 

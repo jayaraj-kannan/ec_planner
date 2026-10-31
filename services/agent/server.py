@@ -8,8 +8,10 @@ Serves the ADK agent over HTTP and SSE endpoints, providing:
 - Full CORS support for the Vue 3 frontend
 """
 
+import html
 import json
 import os
+import re
 import sqlite3
 import uuid
 from datetime import datetime, timezone
@@ -19,7 +21,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from app.agent import (
     AGENT_INSTRUCTION,
@@ -48,20 +50,98 @@ load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
 load_dotenv(os.path.join(os.path.dirname(__file__), "../../.env"))
 load_dotenv()
 
+# Security & Validation Constants
+ROOM_ID_PATTERN = re.compile(r"^[a-zA-Z0-9_\-\.]{1,128}$")
+MAX_REQUEST_BODY_SIZE = 2 * 1024 * 1024  # 2 MB limit for JSON / API payloads
+MAX_ROOM_CONNECTIONS = 250  # DoS protection for WebSocket watchers per room
+
+JAILBREAK_PATTERNS = (
+    "ignore previous instructions",
+    "ignore all previous",
+    "disregard your instructions",
+    "system prompt override",
+    "bypass rules",
+    "dan mode",
+    "developer mode output",
+    "reveal your prompt",
+    "show your system prompt",
+    "exfiltrate",
+)
+
+
+def sanitize_text(val: Optional[str]) -> Optional[str]:
+    """Sanitizes user input by stripping dangerous script tags and trimming whitespace."""
+    if val is None:
+        return None
+    cleaned = re.sub(r"<\s*script[^>]*>.*?<\s*/\s*script\s*>", "", val, flags=re.IGNORECASE | re.DOTALL)
+    return cleaned.strip()
+
+
+def is_potential_jailbreak(text: str) -> bool:
+    """Detects adversarial jailbreak and prompt extraction attempts."""
+    lower = text.lower()
+    return any(p in lower for p in JAILBREAK_PATTERNS)
+
+
 app = FastAPI(
     title="PlanCraft ADK Agent Service",
     description="Agent Development Kit (ADK) Service for Event and Celebration Planning",
     version="1.1.0",
 )
 
-# CORS setup for web frontend
+# CORS setup with environment-controlled origins & safe defaults
+ALLOWED_ORIGINS_ENV = os.getenv("ALLOWED_ORIGINS")
+if ALLOWED_ORIGINS_ENV:
+    allowed_origins = [o.strip() for o in ALLOWED_ORIGINS_ENV.split(",") if o.strip()]
+else:
+    allowed_origins = [
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://localhost:8080",
+        "http://127.0.0.1:8080",
+        "http://localhost:8000",
+        "http://127.0.0.1:8000",
+        "https://ec-planner-28908034002.us-central1.run.app",
+    ]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=allowed_origins if (ALLOWED_ORIGINS_ENV or os.getenv("ENV") == "production") else ["*"],
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"],
     allow_headers=["*"],
+    max_age=86400,
 )
+
+
+@app.middleware("http")
+async def security_headers_and_payload_limiter(request: Request, call_next):
+    # DoS protection: enforce payload limit
+    content_length = request.headers.get("content-length")
+    if content_length:
+        try:
+            if int(content_length) > MAX_REQUEST_BODY_SIZE:
+                return JSONResponse(
+                    status_code=413,
+                    content={"detail": "Payload too large. Maximum allowed size is 2MB."},
+                )
+        except ValueError:
+            pass
+
+    response = await call_next(request)
+
+    # OWASP Recommended Security Headers
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "SAMEORIGIN"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
+
+    proto = request.headers.get("x-forwarded-proto", request.url.scheme)
+    if proto == "https":
+        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+
+    return response
 
 # Local SQLite Database for session tracking
 DB_FILE = os.path.join(os.path.dirname(__file__), "adk_sessions.db")
@@ -94,45 +174,45 @@ def init_db():
 init_db()
 
 
-# Models
+# Validated Models with Strict Bounds
 class ChatRequest(BaseModel):
-    message: str
-    user_id: Optional[str] = "guest_user"
-    session_id: Optional[str] = None
+    message: str = Field(..., min_length=1, max_length=4000, description="Chat message up to 4000 characters")
+    user_id: Optional[str] = Field("guest_user", max_length=128)
+    session_id: Optional[str] = Field(None, max_length=128)
     event_context: Optional[dict[str, Any]] = None
 
 
 class CreateSessionRequest(BaseModel):
-    user_id: Optional[str] = "guest_user"
-    agent_name: Optional[str] = AGENT_NAME
+    user_id: Optional[str] = Field("guest_user", max_length=128)
+    agent_name: Optional[str] = Field(AGENT_NAME, max_length=128)
 
 
 class EventCreateRequest(BaseModel):
-    name: str
-    event_type: str
-    start_date: str
-    planned_budget: float
-    expected_guest_count: int = 100
-    venue_name: str = ""
-    venue_address: str = ""
-    theme: str = ""
-    dress_code: str = ""
-    special_instructions: str = ""
-    currency: str = "USD"
+    name: str = Field(..., min_length=1, max_length=150)
+    event_type: str = Field(..., min_length=1, max_length=60)
+    start_date: str = Field(..., max_length=30)
+    planned_budget: float = Field(..., ge=0, le=100_000_000)
+    expected_guest_count: int = Field(100, ge=1, le=50_000)
+    venue_name: str = Field("", max_length=200)
+    venue_address: str = Field("", max_length=300)
+    theme: str = Field("", max_length=150)
+    dress_code: str = Field("", max_length=150)
+    special_instructions: str = Field("", max_length=2000)
+    currency: str = Field("USD", max_length=10)
 
 
 class EventUpdateRequest(BaseModel):
-    name: Optional[str] = None
-    event_type: Optional[str] = None
-    start_date: Optional[str] = None
-    planned_budget: Optional[float] = None
-    expected_guest_count: Optional[int] = None
-    venue_name: Optional[str] = None
-    venue_address: Optional[str] = None
-    theme: Optional[str] = None
-    dress_code: Optional[str] = None
-    status: Optional[str] = None
-    special_instructions: Optional[str] = None
+    name: Optional[str] = Field(None, max_length=150)
+    event_type: Optional[str] = Field(None, max_length=60)
+    start_date: Optional[str] = Field(None, max_length=30)
+    planned_budget: Optional[float] = Field(None, ge=0, le=100_000_000)
+    expected_guest_count: Optional[int] = Field(None, ge=1, le=50_000)
+    venue_name: Optional[str] = Field(None, max_length=200)
+    venue_address: Optional[str] = Field(None, max_length=300)
+    theme: Optional[str] = Field(None, max_length=150)
+    dress_code: Optional[str] = Field(None, max_length=150)
+    status: Optional[str] = Field(None, max_length=50)
+    special_instructions: Optional[str] = Field(None, max_length=2000)
 
 
 # Helper to run local tool logic when offline or direct matching is needed
@@ -403,6 +483,8 @@ async def get_all_events():
 @app.get("/api/events/{event_id}")
 async def get_single_event(event_id: str):
     """Retrieve details for a specific event."""
+    if not ROOM_ID_PATTERN.match(event_id):
+        raise HTTPException(status_code=400, detail="Invalid event ID format")
     res = get_event_details(event_id)
     if res.get("status") == "error":
         raise HTTPException(status_code=404, detail=res["message"])
@@ -411,38 +493,41 @@ async def get_single_event(event_id: str):
 
 @app.post("/api/events")
 async def create_new_event(req: EventCreateRequest):
-    """Create a new event via REST."""
+    """Create a new event via REST with input sanitization."""
     return create_event(
-        name=req.name,
-        event_type=req.event_type,
-        start_date=req.start_date,
+        name=sanitize_text(req.name) or req.name,
+        event_type=sanitize_text(req.event_type) or req.event_type,
+        start_date=sanitize_text(req.start_date) or req.start_date,
         planned_budget=req.planned_budget,
         expected_guest_count=req.expected_guest_count,
-        venue_name=req.venue_name,
-        venue_address=req.venue_address,
-        theme=req.theme,
-        dress_code=req.dress_code,
-        special_instructions=req.special_instructions,
-        currency=req.currency,
+        venue_name=sanitize_text(req.venue_name) or "",
+        venue_address=sanitize_text(req.venue_address) or "",
+        theme=sanitize_text(req.theme) or "",
+        dress_code=sanitize_text(req.dress_code) or "",
+        special_instructions=sanitize_text(req.special_instructions) or "",
+        currency=sanitize_text(req.currency) or "USD",
     )
 
 
 @app.put("/api/events/{event_id}")
 async def update_single_event(event_id: str, req: EventUpdateRequest):
-    """Update an existing event via REST."""
+    """Update an existing event via REST with input sanitization."""
+    if not ROOM_ID_PATTERN.match(event_id):
+        raise HTTPException(status_code=400, detail="Invalid event ID format")
+
     res = update_event(
         event_id=event_id,
-        name=req.name,
-        event_type=req.event_type,
-        start_date=req.start_date,
+        name=sanitize_text(req.name) if req.name is not None else None,
+        event_type=sanitize_text(req.event_type) if req.event_type is not None else None,
+        start_date=sanitize_text(req.start_date) if req.start_date is not None else None,
         planned_budget=req.planned_budget,
         expected_guest_count=req.expected_guest_count,
-        venue_name=req.venue_name,
-        venue_address=req.venue_address,
-        theme=req.theme,
-        dress_code=req.dress_code,
-        status=req.status,
-        special_instructions=req.special_instructions,
+        venue_name=sanitize_text(req.venue_name) if req.venue_name is not None else None,
+        venue_address=sanitize_text(req.venue_address) if req.venue_address is not None else None,
+        theme=sanitize_text(req.theme) if req.theme is not None else None,
+        dress_code=sanitize_text(req.dress_code) if req.dress_code is not None else None,
+        status=sanitize_text(req.status) if req.status is not None else None,
+        special_instructions=sanitize_text(req.special_instructions) if req.special_instructions is not None else None,
     )
     if res.get("status") == "error":
         raise HTTPException(status_code=404, detail=res["message"])
@@ -452,6 +537,8 @@ async def update_single_event(event_id: str, req: EventUpdateRequest):
 @app.delete("/api/events/{event_id}")
 async def delete_single_event(event_id: str):
     """Delete an event by ID."""
+    if not ROOM_ID_PATTERN.match(event_id):
+        raise HTTPException(status_code=400, detail="Invalid event ID format")
     res = delete_event(event_id)
     if res.get("status") == "error":
         raise HTTPException(status_code=404, detail=res["message"])
@@ -491,6 +578,15 @@ async def chat(req: ChatRequest):
     """Processes chat messages using the ADK Agent, function tools, or A2A proxy."""
     session_id = req.session_id or f"sess_{uuid.uuid4().hex[:10]}"
     user_id = req.user_id or "web-user"
+
+    # Prompt injection & adversarial jailbreak deflection
+    if is_potential_jailbreak(req.message):
+        deflection_text = (
+            "I am PlanCraft AI, dedicated strictly to celebration and event planning. "
+            "I cannot alter or disclose my system instructions, but I am excited to help "
+            "you plan your wedding, birthday, anniversary, or special event! How can I assist with your planning today?"
+        )
+        return {"parts": [{"kind": "text", "text": deflection_text}]}
 
     # Save user message to DB
     conn = sqlite3.connect(DB_FILE)
@@ -864,6 +960,15 @@ class RunSheetBroadcastRequest(BaseModel):
 
 @app.websocket("/ws/runsheet/{room_id}")
 async def websocket_runsheet_endpoint(websocket: WebSocket, room_id: str):
+    if not ROOM_ID_PATTERN.match(room_id):
+        await websocket.close(code=4003, reason="Invalid room ID format")
+        return
+
+    current_watchers = len(runsheet_manager.active_connections.get(room_id, set()))
+    if current_watchers >= MAX_ROOM_CONNECTIONS:
+        await websocket.close(code=4008, reason="Room connection capacity reached")
+        return
+
     await runsheet_manager.connect(websocket, room_id)
     try:
         while True:
@@ -939,6 +1044,9 @@ async def websocket_runsheet_endpoint(websocket: WebSocket, room_id: str):
 
 @app.post("/api/runsheet/{room_id}/broadcast")
 async def broadcast_runsheet_event(room_id: str, req: RunSheetBroadcastRequest):
+    if not ROOM_ID_PATTERN.match(room_id):
+        raise HTTPException(status_code=400, detail="Invalid room ID format. Alphanumeric, hyphen, and underscore characters only.")
+
     now_iso = datetime.now(timezone.utc).isoformat()
     payload = req.model_dump(exclude_none=True)
     payload["timestamp"] = now_iso
@@ -989,7 +1097,16 @@ if _static_dist:
             "openapi.json",
         ]:
             raise HTTPException(status_code=404, detail="Not Found")
-        target_file = os.path.join(_static_dist, full_path)
+
+        # Path traversal defense: ensure target_file cannot escape _static_dist
+        clean_path = os.path.normpath(full_path).lstrip("/")
+        if ".." in clean_path:
+            raise HTTPException(status_code=403, detail="Forbidden")
+
+        target_file = os.path.abspath(os.path.join(_static_dist, clean_path))
+        if not target_file.startswith(os.path.abspath(_static_dist)):
+            raise HTTPException(status_code=403, detail="Forbidden")
+
         if os.path.exists(target_file) and os.path.isfile(target_file):
             return FileResponse(target_file)
         return FileResponse(os.path.join(_static_dist, "index.html"))

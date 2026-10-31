@@ -94,11 +94,17 @@ function setStatus(arrId: string, status: 'ready' | 'in_progress' | 'pending') {
         </div>
 
         <!-- Status Change Quick Buttons -->
-        <div style="border-top: 1px solid var(--surface-border); padding-top: 14px; margin-top: 14px; display: flex; gap: 8px">
+        <div
+          role="group"
+          :aria-label="'Set arrangement status for ' + arr.item"
+          style="border-top: 1px solid var(--surface-border); padding-top: 14px; margin-top: 14px; display: flex; gap: 8px"
+        >
           <button
             class="btn btn-sm"
             style="flex: 1; font-size: 0.75rem"
             :class="arr.status === 'ready' ? 'btn-primary' : 'btn-secondary'"
+            :aria-pressed="arr.status === 'ready'"
+            :aria-label="'Set ' + arr.item + ' to Ready'"
             @click="setStatus(arr.id, 'ready')"
           >
             ✓ Ready
@@ -107,6 +113,8 @@ function setStatus(arrId: string, status: 'ready' | 'in_progress' | 'pending') {
             class="btn btn-sm"
             style="flex: 1; font-size: 0.75rem"
             :class="arr.status === 'in_progress' ? 'btn-primary' : 'btn-secondary'"
+            :aria-pressed="arr.status === 'in_progress'"
+            :aria-label="'Set ' + arr.item + ' to In Progress'"
             @click="setStatus(arr.id, 'in_progress')"
           >
             In Progress
@@ -115,6 +123,8 @@ function setStatus(arrId: string, status: 'ready' | 'in_progress' | 'pending') {
             class="btn btn-sm"
             style="flex: 1; font-size: 0.75rem"
             :class="arr.status === 'pending' ? 'btn-primary' : 'btn-secondary'"
+            :aria-pressed="arr.status === 'pending'"
+            :aria-label="'Set ' + arr.item + ' to Pending'"
             @click="setStatus(arr.id, 'pending')"
           >
             Pending

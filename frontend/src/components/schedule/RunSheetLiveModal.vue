@@ -108,9 +108,17 @@ function handleDone(actId: string) {
 </script>
 
 <template>
-  <div class="modal-overlay" style="padding: 10px" @click.self="actions.closeRunSheetLiveModal()">
+  <div
+    class="modal-overlay"
+    style="padding: 10px"
+    @click.self="actions.closeRunSheetLiveModal()"
+    @keydown.esc="actions.closeRunSheetLiveModal()"
+  >
     <div
       class="modal-box large"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="live-runsheet-modal-title"
       style="
         max-width: 600px;
         height: 92vh;
@@ -144,6 +152,7 @@ function handleDone(actId: string) {
               justify-content: center;
               box-shadow: 0 2px 8px rgba(255, 96, 130, 0.4);
             "
+            aria-hidden="true"
           >
             <PlayCircle :size="20" />
           </div>
@@ -151,7 +160,7 @@ function handleDone(actId: string) {
             <div style="font-size: 0.75rem; color: #B26CFF; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em">
               LIVE COORDINATOR RUN SHEET
             </div>
-            <div style="font-weight: 800; font-size: 1.05rem; color: #FFFFFF">
+            <div id="live-runsheet-modal-title" style="font-weight: 800; font-size: 1.05rem; color: #FFFFFF">
               {{ currentEvent?.name }}
             </div>
           </div>
@@ -160,9 +169,10 @@ function handleDone(actId: string) {
         <button
           class="btn-icon"
           style="color: #FFE4F6"
+          aria-label="Close live run sheet modal"
           @click="actions.closeRunSheetLiveModal()"
         >
-          <X :size="20" />
+          <X :size="20" aria-hidden="true" />
         </button>
       </div>
 
@@ -179,21 +189,25 @@ function handleDone(actId: string) {
       >
         <div>
           <div style="font-size: 0.72rem; color: #9C8EAE; text-transform: uppercase; font-weight: 600">CURRENT TIME (IST)</div>
-          <div style="font-size: 1.4rem; font-weight: 800; color: #FFE4F6; font-family: monospace; text-shadow: 0 0 10px rgba(255, 228, 246, 0.3)">
+          <div
+            style="font-size: 1.4rem; font-weight: 800; color: #FFE4F6; font-family: monospace; text-shadow: 0 0 10px rgba(255, 228, 246, 0.3)"
+            aria-label="Current time"
+          >
             {{ currentTime }}
           </div>
         </div>
 
         <div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 4px">
           <div style="display: flex; gap: 6px; align-items: center">
-            <span class="badge badge-success" style="font-size: 0.72rem">
+            <span class="badge badge-success" style="font-size: 0.72rem" role="status">
               ● SYSTEM ONLINE
             </span>
             <span
               class="badge"
+              role="status"
               style="font-size: 0.7rem; background: rgba(178, 108, 255, 0.15); color: #FFE4F6; border: 1px solid rgba(178, 108, 255, 0.35); display: inline-flex; align-items: center; gap: 3px"
             >
-              <Zap :size="10" />
+              <Zap :size="10" aria-hidden="true" />
               <span>WS SYNC</span>
             </span>
           </div>
@@ -216,7 +230,7 @@ function handleDone(actId: string) {
       >
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px">
           <div style="display: flex; align-items: center; gap: 6px; font-size: 0.74rem; font-weight: 700; color: #FF6082; letter-spacing: 0.05em; text-transform: uppercase">
-            <Globe :size="14" />
+            <Globe :size="14" aria-hidden="true" />
             <span>Public Attendee Share URL</span>
             <span
               class="badge"
@@ -240,6 +254,7 @@ function handleDone(actId: string) {
             type="text"
             readonly
             :value="publicRunSheetUrl"
+            aria-label="Public Run Sheet share URL"
             style="
               flex: 1;
               min-width: 200px;
@@ -257,35 +272,39 @@ function handleDone(actId: string) {
           <button
             class="btn btn-sm"
             style="background: #FF6082; color: white; display: flex; align-items: center; gap: 5px; flex-shrink: 0; font-weight: 700; border: none"
+            :aria-label="copied ? 'Link copied' : 'Copy public share link'"
             @click="copyShareUrl"
           >
-            <component :is="copied ? Check : Copy" :size="14" />
+            <component :is="copied ? Check : Copy" :size="14" aria-hidden="true" />
             <span>{{ copied ? 'Copied' : 'Copy' }}</span>
           </button>
 
           <button
             class="btn btn-sm"
             style="background: rgba(178, 108, 255, 0.2); color: #FFE4F6; border: 1px solid rgba(178, 108, 255, 0.35); display: flex; align-items: center; gap: 5px; flex-shrink: 0"
+            aria-label="Share public run sheet URL"
             @click="shareRunSheet"
             title="Share with attendees"
           >
-            <Share2 :size="14" />
+            <Share2 :size="14" aria-hidden="true" />
             <span>Share</span>
           </button>
 
           <button
             class="btn btn-sm"
             style="background: linear-gradient(135deg, #705EFF 0%, #B26CFF 100%); color: white; border: none; font-weight: 700; display: flex; align-items: center; gap: 5px; flex-shrink: 0"
+            aria-label="View public attendee schedule"
             @click="openPublicView"
             title="Open public attendee view"
           >
-            <ExternalLink :size="14" />
+            <ExternalLink :size="14" aria-hidden="true" />
             <span>View</span>
           </button>
 
           <button
             class="btn btn-sm btn-secondary"
             style="border-color: rgba(178, 108, 255, 0.35); color: #C3B4D2; font-size: 0.75rem; background: transparent"
+            aria-label="Pause live attendee access"
             @click="toggleLaunch"
             title="Pause live access for attendees"
           >
@@ -300,6 +319,7 @@ function handleDone(actId: string) {
           <button
             class="btn btn-sm btn-primary"
             style="background: linear-gradient(135deg, #FF6082 0%, #B26CFF 100%); border: none; color: white; font-weight: 700; box-shadow: 0 4px 12px rgba(255, 96, 130, 0.3)"
+            aria-label="Launch live run sheet and generate public URL"
             @click="toggleLaunch"
           >
             🚀 Launch Live Run Sheet & Generate URL
@@ -308,7 +328,12 @@ function handleDone(actId: string) {
       </div>
 
       <!-- Run Sheet Activities List -->
-      <div class="modal-body" style="padding: 16px; display: flex; flex-direction: column; gap: 14px; background: #0F081D">
+      <div
+        class="modal-body"
+        style="padding: 16px; display: flex; flex-direction: column; gap: 14px; background: #0F081D"
+        role="region"
+        aria-label="Live activities sequence"
+      >
         <div
           v-for="(act, idx) in eventSchedule"
           :key="act.id"
@@ -385,29 +410,32 @@ function handleDone(actId: string) {
             <a
               :href="'tel:' + act.phone"
               class="btn btn-sm"
+              :aria-label="'Call lead ' + act.responsiblePerson + ' at ' + act.phone"
               style="background: rgba(178, 108, 255, 0.2); color: #FFE4F6; border: 1px solid rgba(178, 108, 255, 0.35); text-decoration: none; font-weight: 600"
             >
-              <Phone :size="14" style="color: #FF6082" />
+              <Phone :size="14" style="color: #FF6082" aria-hidden="true" />
               <span>Call Lead</span>
             </a>
 
             <button
               v-if="act.status !== 'completed'"
               class="btn btn-sm"
+              :aria-label="'Report 15 minute delay for ' + act.activityName"
               style="background: #451A03; color: #F59E0B; border: 1px solid #78350F"
               @click="handleDelay(act.id, 15)"
             >
-              <FastForward :size="14" />
+              <FastForward :size="14" aria-hidden="true" />
               <span>+15m Delay</span>
             </button>
 
             <button
               v-if="act.status !== 'completed'"
               class="btn btn-sm"
+              :aria-label="'Mark ' + act.activityName + ' as completed'"
               style="background: #064E3B; color: #34D399; border: 1px solid #047857; margin-left: auto"
               @click="handleDone(act.id)"
             >
-              <CheckCircle2 :size="14" />
+              <CheckCircle2 :size="14" aria-hidden="true" />
               <span>Done</span>
             </button>
           </div>

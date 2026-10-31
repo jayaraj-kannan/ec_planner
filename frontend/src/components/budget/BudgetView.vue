@@ -190,7 +190,15 @@ function handleAddExpense() {
             </span>
           </div>
 
-          <div class="progress-track" style="margin-bottom: 6px">
+          <div
+            class="progress-track"
+            role="progressbar"
+            :aria-valuenow="cat.percent"
+            aria-valuemin="0"
+            aria-valuemax="100"
+            :aria-label="cat.name + ' budget used ' + cat.percent + '%'"
+            style="margin-bottom: 6px"
+          >
             <div class="progress-fill" :class="cat.isOver ? 'danger' : 'primary'"
               :style="{ width: Math.min(100, cat.percent) + '%' }"></div>
           </div>
@@ -208,7 +216,7 @@ function handleAddExpense() {
       <div class="card-header" style="flex-wrap: wrap; gap: 12px">
         <div>
           <div class="card-title">
-            <Receipt :size="18" style="color: var(--primary)" />
+            <Receipt :size="18" style="color: var(--primary)" aria-hidden="true" />
             <span>Recorded Expense Transactions</span>
           </div>
           <div class="card-subtitle">
@@ -218,8 +226,14 @@ function handleAddExpense() {
 
         <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap">
           <!-- Status filter -->
-          <select v-model="selectedStatus" class="form-select"
-            style="width: auto; padding: 6px 12px; font-size: 0.82rem">
+          <label for="expense-status-filter" class="sr-only">Filter by payment status</label>
+          <select
+            id="expense-status-filter"
+            v-model="selectedStatus"
+            class="form-select"
+            aria-label="Filter expenses by payment status"
+            style="width: auto; padding: 6px 12px; font-size: 0.82rem"
+          >
             <option value="all">All Payment Statuses</option>
             <option value="paid">Paid</option>
             <option value="partial">Partially Paid</option>
@@ -230,17 +244,20 @@ function handleAddExpense() {
 
       <!-- Responsive Table -->
       <div style="overflow-x: auto">
-        <table style="width: 100%; border-collapse: collapse; font-size: 0.88rem; text-align: left">
+        <table
+          aria-label="Recorded Expense Transactions"
+          style="width: 100%; border-collapse: collapse; font-size: 0.88rem; text-align: left"
+        >
           <thead>
             <tr
               style="border-bottom: 2px solid var(--surface-border); color: var(--text-muted); font-size: 0.78rem; text-transform: uppercase">
-              <th style="padding: 10px 12px">Date</th>
-              <th style="padding: 10px 12px">Description & Vendor</th>
-              <th style="padding: 10px 12px">Amount + GST</th>
-              <th style="padding: 10px 12px">Method</th>
-              <th style="padding: 10px 12px">Invoice / Receipt</th>
-              <th style="padding: 10px 12px">Status</th>
-              <th style="padding: 10px 12px; text-align: right">Actions</th>
+              <th scope="col" style="padding: 10px 12px">Date</th>
+              <th scope="col" style="padding: 10px 12px">Description & Vendor</th>
+              <th scope="col" style="padding: 10px 12px">Amount + GST</th>
+              <th scope="col" style="padding: 10px 12px">Method</th>
+              <th scope="col" style="padding: 10px 12px">Invoice / Receipt</th>
+              <th scope="col" style="padding: 10px 12px">Status</th>
+              <th scope="col" style="padding: 10px 12px; text-align: right">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -267,7 +284,7 @@ function handleAddExpense() {
               </td>
               <td style="padding: 12px">
                 <div style="display: flex; align-items: center; gap: 6px; font-size: 0.8rem; color: var(--primary)">
-                  <Receipt :size="14" />
+                  <Receipt :size="14" aria-hidden="true" />
                   <span>{{ exp.invoiceNumber || 'No Invoice #' }}</span>
                 </div>
               </td>
@@ -283,9 +300,14 @@ function handleAddExpense() {
                 </span>
               </td>
               <td style="padding: 12px; text-align: right">
-                <button class="btn-icon" style="color: var(--text-light)" @click="actions.deleteExpense(exp.id)"
-                  title="Remove expense">
-                  <Trash2 :size="16" />
+                <button
+                  class="btn-icon"
+                  style="color: var(--text-light)"
+                  @click="actions.deleteExpense(exp.id)"
+                  title="Remove expense"
+                  :aria-label="'Remove expense ' + exp.description"
+                >
+                  <Trash2 :size="16" aria-hidden="true" />
                 </button>
               </td>
             </tr>
@@ -299,53 +321,77 @@ function handleAddExpense() {
     </div>
 
     <!-- Record New Expense Modal -->
-    <div v-if="isAddExpenseModalOpen" class="modal-overlay" @click.self="isAddExpenseModalOpen = false">
-      <div class="modal-box">
+    <div
+      v-if="isAddExpenseModalOpen"
+      class="modal-overlay"
+      @click.self="isAddExpenseModalOpen = false"
+      @keydown.esc="isAddExpenseModalOpen = false"
+    >
+      <div
+        class="modal-box"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="add-expense-modal-title"
+      >
         <div class="modal-header">
-          <h3 style="font-size: 1.15rem">Record New Expense</h3>
-          <button class="btn-icon" @click="isAddExpenseModalOpen = false">
-            <X :size="18" />
+          <h3 id="add-expense-modal-title" style="font-size: 1.15rem">Record New Expense</h3>
+          <button
+            class="btn-icon"
+            aria-label="Close record expense modal"
+            @click="isAddExpenseModalOpen = false"
+          >
+            <X :size="18" aria-hidden="true" />
           </button>
         </div>
 
         <div class="modal-body">
           <div class="form-group">
-            <label class="form-label">Expense Description</label>
-            <input v-model="newExpense.description" type="text" class="form-input"
-              placeholder="e.g. Stage floral entrance arch advance" />
+            <label class="form-label" for="expense-desc">Expense Description</label>
+            <input
+              id="expense-desc"
+              v-model="newExpense.description"
+              type="text"
+              class="form-input"
+              placeholder="e.g. Stage floral entrance arch advance"
+            />
           </div>
 
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px">
             <div class="form-group">
-              <label class="form-label">Category</label>
-              <select v-model="newExpense.categoryId" class="form-select">
+              <label class="form-label" for="expense-category">Category</label>
+              <select id="expense-category" v-model="newExpense.categoryId" class="form-select">
                 <option v-for="c in eventCategories" :key="c.id" :value="c.id">{{ c.name }}</option>
               </select>
             </div>
 
             <div class="form-group">
-              <label class="form-label">Vendor / Service Provider</label>
-              <input v-model="newExpense.vendorName" type="text" class="form-input"
-                placeholder="e.g. Bloom Florals, Taj Banqueting..." />
+              <label class="form-label" for="expense-vendor">Vendor / Service Provider</label>
+              <input
+                id="expense-vendor"
+                v-model="newExpense.vendorName"
+                type="text"
+                class="form-input"
+                placeholder="e.g. Bloom Florals, Taj Banqueting..."
+              />
             </div>
           </div>
 
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px">
             <div class="form-group">
-              <label class="form-label">Base Amount (₹)</label>
-              <input v-model.number="newExpense.amountMajor" type="number" class="form-input" />
+              <label class="form-label" for="expense-base-amount">Base Amount (₹)</label>
+              <input id="expense-base-amount" v-model.number="newExpense.amountMajor" type="number" class="form-input" />
             </div>
 
             <div class="form-group">
-              <label class="form-label">GST / Tax Amount (₹)</label>
-              <input v-model.number="newExpense.taxMajor" type="number" class="form-input" />
+              <label class="form-label" for="expense-tax-amount">GST / Tax Amount (₹)</label>
+              <input id="expense-tax-amount" v-model.number="newExpense.taxMajor" type="number" class="form-input" />
             </div>
           </div>
 
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px">
             <div class="form-group">
-              <label class="form-label">Payment Method</label>
-              <select v-model="newExpense.paymentMethod" class="form-select">
+              <label class="form-label" for="expense-payment-method">Payment Method</label>
+              <select id="expense-payment-method" v-model="newExpense.paymentMethod" class="form-select">
                 <option value="UPI">UPI (GPay / PhonePe / Paytm)</option>
                 <option value="Bank Transfer">Bank Transfer (NEFT / RTGS)</option>
                 <option value="Credit Card">Credit Card</option>
@@ -355,8 +401,8 @@ function handleAddExpense() {
             </div>
 
             <div class="form-group">
-              <label class="form-label">Payment Status</label>
-              <select v-model="newExpense.paymentStatus" class="form-select">
+              <label class="form-label" for="expense-payment-status">Payment Status</label>
+              <select id="expense-payment-status" v-model="newExpense.paymentStatus" class="form-select">
                 <option value="paid">Paid in Full</option>
                 <option value="partial">Partially Paid</option>
                 <option value="pending">Pending</option>
@@ -366,28 +412,33 @@ function handleAddExpense() {
 
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px">
             <div class="form-group">
-              <label class="form-label">Invoice / Reference #</label>
-              <input v-model="newExpense.invoiceNumber" type="text" class="form-input" placeholder="INV-2026-001" />
+              <label class="form-label" for="expense-invoice-no">Invoice / Reference #</label>
+              <input id="expense-invoice-no" v-model="newExpense.invoiceNumber" type="text" class="form-input" placeholder="INV-2026-001" />
             </div>
 
             <div class="form-group">
-              <label class="form-label">Date of Expense</label>
-              <input v-model="newExpense.expenseDate" type="date" class="form-input" />
+              <label class="form-label" for="expense-date">Date of Expense</label>
+              <input id="expense-date" v-model="newExpense.expenseDate" type="date" class="form-input" />
             </div>
           </div>
 
           <!-- Receipt File Attachment -->
           <div class="form-group">
             <label class="form-label">Receipt File Attachment</label>
-            <div style="
+            <div
+              tabindex="0"
+              role="button"
+              aria-label="Upload receipt attachment PDF or image"
+              style="
                 border: 2px dashed var(--surface-border-strong);
                 border-radius: var(--radius-md);
                 padding: 16px;
                 text-align: center;
                 background: var(--surface-subtle);
                 cursor: pointer;
-              ">
-              <FileUp :size="20" style="color: var(--primary); margin-bottom: 4px" />
+              "
+            >
+              <FileUp :size="20" style="color: var(--primary); margin-bottom: 4px" aria-hidden="true" />
               <div style="font-size: 0.82rem; font-weight: 600; color: var(--text-main)">
                 {{ newExpense.receiptName || 'Click to select PDF or image' }}
               </div>

@@ -185,3 +185,17 @@ def test_rest_broadcast_endpoint():
         assert msg["activity_id"] == "act-rest-1"
         assert msg["delay_minutes"] == 10
 
+
+def test_invalid_websocket_room_id_security():
+    """Tests that malicious or malformed room IDs are rejected over WebSocket and REST."""
+    client = TestClient(app)
+
+    # REST broadcast with malformed room ID
+    res = client.post("/api/runsheet/malicious*room!/broadcast", json={
+        "type": "delay_reported",
+        "activity_id": "act-1",
+        "delay_minutes": 5,
+    })
+    assert res.status_code == 400
+    assert "Invalid room ID format" in res.json()["detail"]
+
