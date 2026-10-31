@@ -2,12 +2,25 @@
 
 > A modern, AI-powered celebration management platform combining **Vue 3**, **Google ADK (Agent Development Kit)**, **Gemini 2.5**, and **Firebase/Firestore** to make wedding, milestone, and celebration planning effortless.
 
-[![Frontend Unit Tests](https://img.shields.io/badge/Frontend%20Tests-136%20Passed-brightgreen)](https://github.com)
+[![Live App](https://img.shields.io/badge/Live%20App-Cloud%20Run-brightgreen?logo=google-cloud&logoColor=white)](https://ec-planner-28908034002.us-central1.run.app)
+[![Frontend Unit Tests](https://img.shields.io/badge/Frontend%20Tests-208%20Passed-brightgreen)](https://github.com)
 [![Line Coverage](https://img.shields.io/badge/Coverage-100%25%20Component%20Lines-success)](https://github.com)
-[![Agent Pytest](https://img.shields.io/badge/Agent%20Tests-46%20Passed-blue)](https://github.com)
+[![Agent Pytest](https://img.shields.io/badge/Agent%20Tests-59%20Passed-blue)](https://github.com)
 [![Vue 3](https://img.shields.io/badge/Vue-3.5%20%2B%20TypeScript-42b883)](https://vuejs.org/)
 [![Google ADK](https://img.shields.io/badge/Google%20ADK-Agent%20Engine%20%2B%20A2UI-4285F4)](https://cloud.google.com/)
 [![Firebase](https://img.shields.io/badge/Firebase-Auth%20%26%20Firestore-FFA611)](https://firebase.google.com/)
+
+---
+
+## 🌐 Live Production Deployment
+
+PlanCraft is deployed live on **Google Cloud Run** in a unified serverless architecture:
+
+- 🔗 **Deployed App URL:** [https://ec-planner-28908034002.us-central1.run.app](https://ec-planner-28908034002.us-central1.run.app)
+- 📍 **GCP Region:** `us-central1`
+- ⚡ **Architecture:** Unified Serverless Container on Cloud Run hosting the Vue 3 SPA client, FastAPI proxy, and real-time WebSocket broadcast hub
+- 🤖 **AI Copilot:** Google Vertex AI Reasoning Engine (`gemini-3.8-flash` / `gemini-2.5` ADK agent) communicating via A2A & rendering rich A2UI cards
+- ⏱️ **Real-Time Run Sheet:** WebSocket broadcast providing instant cross-device synchronization and public attendee hash URLs
 
 ---
 
@@ -142,8 +155,8 @@ npm run test:agent
 ```
 
 ### Test Summary
-- **Frontend**: 16 test suites · **136 / 136 tests passing** · **100% Component Line Coverage**.
-- **Backend Agent**: 5 test suites · **46 / 46 tests passing**.
+- **Frontend**: 19 test suites · **208 / 208 tests passing** · **100% Component Line Coverage**.
+- **Backend Agent**: 6 test suites · **59 / 59 tests passing**.
 - **Type Checking**: Strict TypeScript validation (`vue-tsc -b`) passing with **0 errors**.
 
 ---
@@ -152,7 +165,7 @@ npm run test:agent
 PlanCraft supports two flexible authentication modes:
 - **Google Sign-In**: Instant one-click authentication via Google OAuth popup.
 - **Email & Password**: Account registration and login with input sanitization and password visibility toggle.
-- **Local Fallback**: The app operates smoothly offline with mock celebration datasets even without active cloud connectivity.
+- **Local Fallback**: The app operates smoothly offline with celebration templates and local persistence even without active cloud connectivity.
 
 ---
 
