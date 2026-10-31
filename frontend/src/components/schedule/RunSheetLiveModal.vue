@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import {
   currentEvent,
   eventSchedule,
   actions,
+  getPublicRunSheetUrl,
 } from '../../stores/eventStore';
 import {
   X,
@@ -12,9 +13,65 @@ import {
   CheckCircle2,
   PlayCircle,
   ShieldAlert,
+  Copy,
+  Check,
+  Share2,
+  ExternalLink,
+  Globe,
+  Zap,
 } from 'lucide-vue-next';
+import { runSheetWsService } from '../../services/websocket.service';
 
 const currentTime = ref('');
+const copied = ref(false);
+
+const isRunSheetLaunched = computed(() => !!currentEvent.value?.isRunSheetLaunched);
+
+const publicRunSheetUrl = computed(() => {
+  return getPublicRunSheetUrl(currentEvent.value.id);
+});
+
+function toggleLaunch() {
+  if (isRunSheetLaunched.value) {
+    actions.unpublishRunSheet(currentEvent.value.id);
+  } else {
+    actions.launchRunSheet(currentEvent.value.id);
+  }
+}
+
+async function copyShareUrl() {
+  try {
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      await navigator.clipboard.writeText(publicRunSheetUrl.value);
+    }
+    copied.value = true;
+    setTimeout(() => {
+      copied.value = false;
+    }, 2500);
+  } catch (err) {
+    console.warn('Copy failed:', err);
+  }
+}
+
+async function shareRunSheet() {
+  if (typeof navigator !== 'undefined' && navigator.share) {
+    try {
+      await navigator.share({
+        title: `${currentEvent.value.name} — Live Run Sheet`,
+        text: `Watch the live itinerary and schedule updates for ${currentEvent.value.name}:`,
+        url: publicRunSheetUrl.value,
+      });
+      return;
+    } catch {
+      // Fallback
+    }
+  }
+  await copyShareUrl();
+}
+
+function openPublicView() {
+  actions.openPublicRunSheet(currentEvent.value.id);
+}
 
 let timer: any = null;
 
@@ -121,13 +178,126 @@ function handleDone(actId: string) {
           </div>
         </div>
 
-        <div style="text-align: right">
-          <span class="badge badge-success" style="font-size: 0.75rem">
-            ● SYSTEM ONLINE
-          </span>
-          <div style="font-size: 0.72rem; color: #94A3B8; margin-top: 2px">
+        <div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 4px">
+          <div style="display: flex; gap: 6px; align-items: center">
+            <span class="badge badge-success" style="font-size: 0.72rem">
+              ● SYSTEM ONLINE
+            </span>
+            <span
+              class="badge"
+              style="font-size: 0.7rem; background: rgba(56, 189, 248, 0.15); color: #38BDF8; border: 1px solid rgba(56, 189, 248, 0.35); display: inline-flex; align-items: center; gap: 3px"
+            >
+              <Zap :size="10" />
+              <span>WS SYNC</span>
+            </span>
+          </div>
+          <div style="font-size: 0.72rem; color: #94A3B8">
             {{ currentEvent.startDate }}
           </div>
+        </div>
+      </div>
+
+      <!-- Public Shareable Run Sheet URL -->
+      <div
+        style="
+          padding: 12px 20px;
+          background: #1E293B;
+          border-bottom: 1px solid #334155;
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        "
+      >
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px">
+          <div style="display: flex; align-items: center; gap: 6px; font-size: 0.74rem; font-weight: 700; color: #38BDF8; letter-spacing: 0.05em; text-transform: uppercase">
+            <Globe :size="14" />
+            <span>Public Attendee Share URL</span>
+            <span
+              class="badge"
+              :style="{
+                fontSize: '0.68rem',
+                background: isRunSheetLaunched ? 'rgba(16, 185, 129, 0.2)' : 'rgba(245, 158, 11, 0.2)',
+                color: isRunSheetLaunched ? '#34D399' : '#FBBF24',
+                border: isRunSheetLaunched ? '1px solid #059669' : '1px solid #D97706',
+              }"
+            >
+              {{ isRunSheetLaunched ? '● LIVE LAUNCHED' : '○ UNPUBLISHED' }}
+            </span>
+          </div>
+          <span style="font-size: 0.7rem; color: #94A3B8">
+            {{ isRunSheetLaunched ? 'Guests & family watch schedule without signing in' : 'Attendees see Standby screen until launched' }}
+          </span>
+        </div>
+
+        <div v-if="isRunSheetLaunched" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap">
+          <input
+            type="text"
+            readonly
+            :value="publicRunSheetUrl"
+            style="
+              flex: 1;
+              min-width: 200px;
+              background: #0B1120;
+              border: 1px solid #475569;
+              border-radius: 6px;
+              color: #38BDF8;
+              font-family: monospace;
+              font-size: 0.78rem;
+              padding: 6px 10px;
+            "
+            @focus="($event.target as HTMLInputElement)?.select()"
+          />
+
+          <button
+            class="btn btn-sm"
+            style="background: #0284C7; color: white; display: flex; align-items: center; gap: 5px; flex-shrink: 0"
+            @click="copyShareUrl"
+          >
+            <component :is="copied ? Check : Copy" :size="14" />
+            <span>{{ copied ? 'Copied' : 'Copy' }}</span>
+          </button>
+
+          <button
+            class="btn btn-sm"
+            style="background: #334155; color: #E2E8F0; display: flex; align-items: center; gap: 5px; flex-shrink: 0"
+            @click="shareRunSheet"
+            title="Share with attendees"
+          >
+            <Share2 :size="14" />
+            <span>Share</span>
+          </button>
+
+          <button
+            class="btn btn-sm"
+            style="background: #0F766E; color: white; display: flex; align-items: center; gap: 5px; flex-shrink: 0"
+            @click="openPublicView"
+            title="Open public attendee view"
+          >
+            <ExternalLink :size="14" />
+            <span>View</span>
+          </button>
+
+          <button
+            class="btn btn-sm btn-secondary"
+            style="border-color: #64748B; color: #94A3B8; font-size: 0.75rem"
+            @click="toggleLaunch"
+            title="Pause live access for attendees"
+          >
+            Pause Live
+          </button>
+        </div>
+
+        <div v-else style="display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 6px 0; flex-wrap: wrap">
+          <span style="font-size: 0.8rem; color: #FBBF24">
+            ⚠️ Live run sheet is currently offline. No public URL generated for guests.
+          </span>
+          <button
+            class="btn btn-sm btn-primary"
+            style="background: #10B981; border: none; color: white; font-weight: 600"
+            @click="toggleLaunch"
+          >
+            🚀 Launch Live Run Sheet & Generate URL
+          </button>
         </div>
       </div>
 

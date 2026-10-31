@@ -105,4 +105,25 @@ describe('ChecklistView Component Unit Tests', () => {
       expect(state.tasks.some((t) => t.taskName === 'Coordinate Sound Check with DJ')).toBe(true);
     }
   });
+
+  it('triggers AI checklist generation modal from header and empty state buttons', async () => {
+    const wrapper = mount(ChecklistView);
+    const aiHeaderBtn = wrapper.findAll('.view-header button').find((b) => b.text().includes('Generate with AI'));
+    expect(aiHeaderBtn).toBeDefined();
+
+    await aiHeaderBtn?.trigger('click');
+    expect(state.isAgentChatModalOpen).toBe(true);
+    expect(state.agentPendingQuery).toContain('Generate a personalized milestone checklist');
+
+    // Simulate empty state by filtering for an impossible category
+    state.tasks = [];
+    await wrapper.vm.$nextTick();
+
+    expect(wrapper.text()).toContain('No tasks in this view');
+    const emptyStateAiBtn = wrapper.findAll('.card button').find((b) => b.text().includes('Generate Checklist with AI'));
+    expect(emptyStateAiBtn).toBeDefined();
+
+    await emptyStateAiBtn?.trigger('click');
+    expect(state.isAgentChatModalOpen).toBe(true);
+  });
 });

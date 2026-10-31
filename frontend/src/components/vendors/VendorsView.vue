@@ -67,32 +67,25 @@ function handleAddVendor() {
 
       <button class="btn btn-primary" @click="isAddVendorModalOpen = true">
         <Plus :size="16" />
-        <span>+ Add Partner Vendor</span>
+        <span>Add Partner Vendor</span>
       </button>
     </div>
 
     <!-- Vendor Cards Grid -->
     <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 20px">
-      <div
-        v-for="v in eventVendors"
-        :key="v.id"
-        class="card"
-        style="display: flex; flex-direction: column; justify-content: space-between"
-      >
+      <div v-for="v in eventVendors" :key="v.id" class="card"
+        style="display: flex; flex-direction: column; justify-content: space-between">
         <div>
           <!-- Top Row: Category & Status -->
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px">
             <span class="badge badge-neutral" style="font-size: 0.75rem">
               {{ v.category }}
             </span>
-            <span
-              class="badge"
-              :class="{
-                'badge-success': v.status === 'Contract Signed',
-                'badge-warning': v.status === 'Quoted',
-                'badge-info': v.status === 'In Discussion',
-              }"
-            >
+            <span class="badge" :class="{
+              'badge-success': v.status === 'Contract Signed',
+              'badge-warning': v.status === 'Quoted',
+              'badge-info': v.status === 'In Discussion',
+            }">
               {{ v.status }}
             </span>
           </div>
@@ -101,15 +94,15 @@ function handleAddVendor() {
             {{ v.name }}
           </h3>
 
-          <div style="display: flex; align-items: center; gap: 4px; font-size: 0.78rem; color: #D97706; margin-bottom: 12px">
+          <div
+            style="display: flex; align-items: center; gap: 4px; font-size: 0.78rem; color: #D97706; margin-bottom: 12px">
             <Star :size="14" fill="#D97706" />
             <span style="font-weight: 700">{{ v.rating || '4.8' }} / 5.0</span>
             <span style="color: var(--text-muted)">• Primary Contact: {{ v.contactPerson }}</span>
           </div>
 
           <!-- Financial summary box -->
-          <div
-            style="
+          <div style="
               background: var(--surface-subtle);
               border-radius: var(--radius-md);
               padding: 12px;
@@ -117,8 +110,7 @@ function handleAddVendor() {
               grid-template-columns: 1fr 1fr;
               gap: 10px;
               margin-bottom: 14px;
-            "
-          >
+            ">
             <div>
               <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase">Agreed Contract</div>
               <div style="font-weight: 700; font-size: 0.95rem; color: var(--text-main)">
@@ -133,7 +125,8 @@ function handleAddVendor() {
               </div>
             </div>
 
-            <div style="grid-column: span 2; border-top: 1px solid var(--surface-border); padding-top: 6px; display: flex; justify-content: space-between; font-size: 0.75rem">
+            <div
+              style="grid-column: span 2; border-top: 1px solid var(--surface-border); padding-top: 6px; display: flex; justify-content: space-between; font-size: 0.75rem">
               <span style="color: var(--text-muted)">Outstanding Balance:</span>
               <span style="font-weight: 800; color: var(--warning)">
                 {{ formatCurrency(Math.max(0, v.agreedPriceMinor - v.advancePaidMinor), currentEvent.currency) }}
@@ -158,15 +151,13 @@ function handleAddVendor() {
           </p>
         </div>
 
-        <div style="padding-top: 14px; border-top: 1px solid var(--surface-border); margin-top: 14px; display: flex; justify-content: space-between; align-items: center">
+        <div
+          style="padding-top: 14px; border-top: 1px solid var(--surface-border); margin-top: 14px; display: flex; justify-content: space-between; align-items: center">
           <span style="font-size: 0.75rem; color: var(--text-light)">
             Verified Vendor Partner
           </span>
 
-          <a
-            :href="'tel:' + v.mobileNumber"
-            class="btn btn-outline btn-sm"
-          >
+          <a :href="'tel:' + v.mobileNumber" class="btn btn-outline btn-sm">
             <Phone :size="14" />
             <span>Call Partner</span>
           </a>
@@ -187,55 +178,32 @@ function handleAddVendor() {
         <div class="modal-body">
           <div class="form-group">
             <label class="form-label">Vendor Company / Business Name</label>
-            <input
-              v-model="newVendor.name"
-              type="text"
-              class="form-input"
-              placeholder="e.g. Royal Stage Lights & Trussing"
-            />
+            <input v-model="newVendor.name" type="text" class="form-input"
+              placeholder="e.g. Royal Stage Lights & Trussing" />
           </div>
 
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px">
             <div class="form-group">
               <label class="form-label">Service Category</label>
-              <input
-                v-model="newVendor.category"
-                type="text"
-                class="form-input"
-                placeholder="e.g. Floral, Stage, Photography..."
-              />
+              <input v-model="newVendor.category" type="text" class="form-input"
+                placeholder="e.g. Floral, Stage, Photography..." />
             </div>
 
             <div class="form-group">
               <label class="form-label">Contact Person Name</label>
-              <input
-                v-model="newVendor.contactPerson"
-                type="text"
-                class="form-input"
-                placeholder="e.g. Sandeep Roy"
-              />
+              <input v-model="newVendor.contactPerson" type="text" class="form-input" placeholder="e.g. Sandeep Roy" />
             </div>
           </div>
 
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px">
             <div class="form-group">
               <label class="form-label">Mobile Number</label>
-              <input
-                v-model="newVendor.mobileNumber"
-                type="text"
-                class="form-input"
-                placeholder="+91 98450 11223"
-              />
+              <input v-model="newVendor.mobileNumber" type="text" class="form-input" placeholder="+91 98450 11223" />
             </div>
 
             <div class="form-group">
               <label class="form-label">Email Address</label>
-              <input
-                v-model="newVendor.email"
-                type="email"
-                class="form-input"
-                placeholder="partner@vendor.com"
-              />
+              <input v-model="newVendor.email" type="email" class="form-input" placeholder="partner@vendor.com" />
             </div>
           </div>
 
@@ -263,12 +231,8 @@ function handleAddVendor() {
 
           <div class="form-group">
             <label class="form-label">Deliverables & Deliverable Notes</label>
-            <textarea
-              v-model="newVendor.notes"
-              rows="2"
-              class="form-textarea"
-              placeholder="e.g. Includes 4 photographers, 2 drone pilots, same-day teaser..."
-            ></textarea>
+            <textarea v-model="newVendor.notes" rows="2" class="form-textarea"
+              placeholder="e.g. Includes 4 photographers, 2 drone pilots, same-day teaser..."></textarea>
           </div>
         </div>
 

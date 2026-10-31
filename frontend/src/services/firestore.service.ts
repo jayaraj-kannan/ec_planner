@@ -3,6 +3,7 @@ import {
   doc,
   setDoc,
   getDocs,
+  getDoc,
   deleteDoc,
   query,
   where,
@@ -95,6 +96,33 @@ export async function fetchUserEvents(userId: string): Promise<EventItem[]> {
   } catch (err) {
     console.warn('Firestore fetchUserEvents fallback:', err);
     return [];
+  }
+}
+
+export async function fetchEventById(eventIdOrHash: string): Promise<EventItem | null> {
+  if (!eventIdOrHash) return null;
+  try {
+    const eventRef = doc(db, 'events', eventIdOrHash);
+    const snap = await getDoc(eventRef);
+    if (snap && typeof snap.exists === 'function' && snap.exists()) {
+      return snap.data() as EventItem;
+    }
+    // Also check if matches system-generated unique runSheetHashCode
+    if (eventIdOrHash.startsWith('rs-')) {
+      const q = query(collection(db, 'events'), where('runSheetHashCode', '==', eventIdOrHash));
+      const querySnap = await getDocs(q);
+      let matched: EventItem | null = null;
+      if (querySnap && typeof querySnap.forEach === 'function') {
+        querySnap.forEach((d) => {
+          if (!matched) matched = d.data() as EventItem;
+        });
+      }
+      return matched;
+    }
+    return null;
+  } catch (err) {
+    console.warn('Firestore fetchEventById fallback:', err);
+    return null;
   }
 }
 

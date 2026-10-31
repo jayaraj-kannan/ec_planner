@@ -19,6 +19,10 @@ vi.mock('firebase/firestore', () => {
         cb({ data: () => ({ id: 'evt-10', title: 'Fetched Event' }) });
       },
     }),
+    getDoc: vi.fn().mockResolvedValue({
+      exists: () => true,
+      data: () => ({ id: 'evt-1', name: 'Fetched Single Event' }),
+    }),
     onSnapshot: vi.fn((_ref, cb) => {
       cb({
         forEach: (docCb: any) => {
@@ -37,6 +41,7 @@ import {
   saveEventDoc,
   deleteEventDoc,
   fetchUserEvents,
+  fetchEventById,
   fetchEventSubcollections,
   saveTaskDoc,
   deleteTaskDoc,
@@ -122,6 +127,28 @@ describe('firestore.service Unit Tests', () => {
       vi.mocked(firestore.getDocs).mockRejectedValueOnce(new Error('Offline'));
       const events = await fetchUserEvents('user-123');
       expect(events).toEqual([]);
+    });
+
+    it('fetches single event by id when document exists', async () => {
+      const event = await fetchEventById('evt-1');
+      expect(firestore.doc).toHaveBeenCalledWith(expect.anything(), 'events', 'evt-1');
+      expect(event).toBeDefined();
+      expect(event?.id).toBe('evt-1');
+    });
+
+    it('returns null when event document does not exist', async () => {
+      vi.mocked(firestore.getDoc).mockResolvedValueOnce({
+        exists: () => false,
+        data: () => undefined,
+      } as any);
+      const event = await fetchEventById('non-existent');
+      expect(event).toBeNull();
+    });
+
+    it('returns null and catches gracefully when fetchEventById fails', async () => {
+      vi.mocked(firestore.getDoc).mockRejectedValueOnce(new Error('Network error'));
+      const event = await fetchEventById('evt-err');
+      expect(event).toBeNull();
     });
 
     it('fetches event subcollections for all subcollections', async () => {

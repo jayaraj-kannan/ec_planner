@@ -92,6 +92,20 @@ class TestGenerateDayOfRunSheet:
         assert len(result["timeline"]) >= 4
 
 
+    def test_run_sheet_with_event_context(self):
+        result = generate_day_of_run_sheet(
+            event_type="wedding",
+            start_time="11:00",
+            duration_hours=5,
+            event_id="evt-wedding-88",
+            event_name="Siddharth & Rhea Wedding",
+        )
+        assert result["event_id"] == "evt-wedding-88"
+        assert result["event_name"] == "Siddharth & Rhea Wedding"
+        assert result["event_type"] == "wedding"
+        assert len(result["timeline"]) >= 5
+
+
 class TestGenerateChecklistTasks:
     """Test suite for generate_checklist_tasks tool."""
 
@@ -120,6 +134,21 @@ class TestGenerateChecklistTasks:
             days_until_event=15,
         )
         assert "Lock in headcount" in result["suggested_immediate_action"]
+
+    def test_checklist_with_event_context(self):
+        result = generate_checklist_tasks(
+            event_type="birthday",
+            days_until_event=20,
+            event_id="evt-birthday-99",
+            event_name="Leo 5th Birthday Bash",
+        )
+        assert result["event_id"] == "evt-birthday-99"
+        assert result["event_name"] == "Leo 5th Birthday Bash"
+        assert result["event_type"] == "birthday"
+        assert result["days_remaining"] == 20
+        # Verify birthday specific tasks are present
+        all_titles = [t["title"] for phase in result["milestone_phases"] for t in phase["tasks"]]
+        assert any("cake design" in t.lower() for t in all_titles)
 
 
 class TestRecommendVendors:

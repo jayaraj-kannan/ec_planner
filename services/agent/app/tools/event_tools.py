@@ -91,12 +91,16 @@ def calculate_budget_breakdown(
 def generate_checklist_tasks(
     event_type: str = "wedding",
     days_until_event: int = 90,
+    event_id: str = "",
+    event_name: str = "",
 ) -> dict[str, Any]:
     """Generates milestone-based checklist tasks tailored to the event type and remaining timeline.
 
     Args:
         event_type: Type of celebration ('wedding', 'birthday', 'anniversary', 'baby_shower', 'corporate').
         days_until_event: Number of days remaining until the celebration date.
+        event_id: Unique ID of the event in context (optional).
+        event_name: Human-friendly name of the celebration in context (optional).
 
     Returns:
         Structured checklist organized by timeline phase and priority.
@@ -110,10 +114,30 @@ def generate_checklist_tasks(
         {"title": "Set firm overall budget limit", "priority": "High", "phase": "Planning Phase"},
         {"title": "Shortlist and book primary venue", "priority": "Urgent", "phase": "Planning Phase"},
     ]
-    if "wedding" in event_type_lower:
+    if "wedding" in event_type_lower or "reception" in event_type_lower:
         early_tasks.extend([
             {"title": "Book photographer and videographer", "priority": "High", "phase": "Planning Phase"},
             {"title": "Select catering menu and schedule tasting", "priority": "Medium", "phase": "Planning Phase"},
+        ])
+    elif "birthday" in event_type_lower:
+        early_tasks.extend([
+            {"title": "Decide celebration theme and custom cake design", "priority": "High", "phase": "Planning Phase"},
+            {"title": "Book entertainer / DJ / magician / party host", "priority": "Medium", "phase": "Planning Phase"},
+        ])
+    elif "anniversary" in event_type_lower:
+        early_tasks.extend([
+            {"title": "Curate memory photo slideshow and audio playlist", "priority": "High", "phase": "Planning Phase"},
+            {"title": "Select banquet catering and signature toast drinks", "priority": "Medium", "phase": "Planning Phase"},
+        ])
+    elif "baby" in event_type_lower:
+        early_tasks.extend([
+            {"title": "Plan interactive baby shower games and prizes", "priority": "High", "phase": "Planning Phase"},
+            {"title": "Design personalized party favors and guest book", "priority": "Medium", "phase": "Planning Phase"},
+        ])
+    elif "corporate" in event_type_lower:
+        early_tasks.extend([
+            {"title": "Confirm keynote speakers and AV tech specifications", "priority": "High", "phase": "Planning Phase"},
+            {"title": "Order delegate badges, lanyards, and event swag", "priority": "Medium", "phase": "Planning Phase"},
         ])
     phases.append({"timeline": "Early Phase (3+ months out)", "tasks": early_tasks})
 
@@ -144,12 +168,18 @@ def generate_checklist_tasks(
 
     urgent_action = "Book venue and confirm date" if days_until_event > 60 else "Lock in headcount and vendor schedules"
 
-    return {
+    result: dict[str, Any] = {
         "event_type": event_type,
         "days_remaining": days_until_event,
         "suggested_immediate_action": urgent_action,
         "milestone_phases": phases,
     }
+    if event_id:
+        result["event_id"] = event_id
+    if event_name:
+        result["event_name"] = event_name
+
+    return result
 
 
 def recommend_vendors(
@@ -229,6 +259,8 @@ def generate_day_of_run_sheet(
     event_type: str = "wedding",
     start_time: str = "10:00",
     duration_hours: int = 6,
+    event_id: str = "",
+    event_name: str = "",
 ) -> dict[str, Any]:
     """Generates an hour-by-hour run sheet and activity timeline for the day of the event.
 
@@ -236,9 +268,11 @@ def generate_day_of_run_sheet(
         event_type: Celebration type ('wedding', 'birthday', 'anniversary', 'reception', 'party').
         start_time: Event start time in 24hr format ('HH:MM', e.g. '11:00').
         duration_hours: Event duration in hours (e.g. 5).
+        event_id: Unique event ID in context (optional).
+        event_name: Human-friendly celebration name in context (optional).
 
     Returns:
-        Structured hourly run sheet with owner assignments and buffer periods.
+        Structured hourly run sheet with owner assignments, public live link metadata, and buffer periods.
     """
     event_type_lower = event_type.lower()
     slots = []
@@ -347,11 +381,17 @@ def generate_day_of_run_sheet(
         "notes": "Collect personal items, settle final vendor tips, verify venue handover.",
     })
 
-    return {
+    result: dict[str, Any] = {
         "event_type": event_type,
         "schedule_count": len(slots),
         "timeline": slots,
     }
+    if event_id:
+        result["event_id"] = event_id
+    if event_name:
+        result["event_name"] = event_name
+
+    return result
 
 
 def analyze_event_readiness(

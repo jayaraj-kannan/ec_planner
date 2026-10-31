@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref, onMounted, nextTick } from 'vue';
-import { state, actions, currentEvent } from '../../stores/eventStore';
+import { ref, onMounted, nextTick, watch } from 'vue';
+import { state, actions, currentEvent, calculateDaysUntil } from '../../stores/eventStore';
 import {
   Sparkles,
   Send,
@@ -42,6 +42,7 @@ const messages = ref<ChatMessage[]>([
 
 const quickPrompts = [
   { label: '🎉 Create New Event', query: 'Create a new anniversary celebration called Sarah & John Silver Jubilee on 2026-11-20 with budget $20,000 and 150 guests at Grand Palace' },
+  { label: '📋 Generate Checklist', query: 'Generate a personalized milestone checklist for my active celebration' },
   { label: '✏️ Update Event Details', query: 'Update my active event: set expected guests to 200 and increase budget to $25,000' },
   { label: '📅 List All Events', query: 'List all events currently in my planner' },
   { label: '💰 Budget Breakdown', query: 'Calculate budget breakdown for a $15,000 celebration with 120 guests' },
@@ -49,7 +50,13 @@ const quickPrompts = [
   { label: '🎯 Readiness Score', query: 'Analyze my event readiness score and identify urgent risks' },
 ];
 
-const AGENT_API_BASE = 'http://localhost:8000';
+const AGENT_API_BASE =
+  (import.meta as any).env?.VITE_API_BASE ||
+  (typeof window !== 'undefined' &&
+  window.location.hostname !== 'localhost' &&
+  window.location.hostname !== '127.0.0.1'
+    ? window.location.origin
+    : 'http://localhost:8000');
 
 async function checkHealth() {
   try {
@@ -66,7 +73,33 @@ async function checkHealth() {
 
 onMounted(() => {
   checkHealth();
+  if (state.agentPendingQuery && state.isAgentChatModalOpen) {
+    const q = state.agentPendingQuery;
+    state.agentPendingQuery = '';
+    sendQuickPrompt(q);
+  }
 });
+
+watch(
+  () => state.agentPendingQuery,
+  (newQuery) => {
+    if (newQuery && state.isAgentChatModalOpen) {
+      state.agentPendingQuery = '';
+      sendQuickPrompt(newQuery);
+    }
+  }
+);
+
+watch(
+  () => state.isAgentChatModalOpen,
+  (isOpen) => {
+    if (isOpen && state.agentPendingQuery) {
+      const q = state.agentPendingQuery;
+      state.agentPendingQuery = '';
+      sendQuickPrompt(q);
+    }
+  }
+);
 
 function scrollToBottom() {
   nextTick(() => {
@@ -89,7 +122,7 @@ function selectIntoChat(promptText: string, autoFocus = true) {
 
 function selectEventIntoChat(
   eventItem: any,
-  action: 'select' | 'details' | 'edit' | 'budget' | 'runsheet' = 'select'
+  action: 'select' | 'details' | 'edit' | 'budget' | 'runsheet' | 'checklist' = 'select'
 ) {
   if (!eventItem) return;
   actions.setActiveEvent(eventItem.id);
@@ -98,6 +131,8 @@ function selectEventIntoChat(
     selectIntoChat(`Show details and planning next steps for ${eventItem.name}`);
   } else if (action === 'details') {
     selectIntoChat(`Show complete event details for ${eventItem.name}`);
+  } else if (action === 'checklist') {
+    selectIntoChat(`Generate milestone checklist tasks for ${eventItem.name}`);
   } else if (action === 'edit') {
     selectIntoChat(`Update ${eventItem.name}: change budget to $ and guests to `);
   } else if (action === 'budget') {
@@ -127,7 +162,9 @@ function getCardTitle(a2uiData: any): string {
     case 'generate_day_of_run_sheet':
       return `⏱️ Day-Of Run Sheet: ${p.event_type?.toUpperCase() || 'TIMELINE'}`;
     case 'generate_checklist_tasks':
-      return `📋 Planning Checklist: ${p.event_type?.toUpperCase() || 'TASKS'}`;
+      return p.event_name
+        ? `📋 Planning Checklist: ${p.event_name}`
+        : `📋 Planning Checklist: ${p.event_type?.toUpperCase() || 'TASKS'}`;
     case 'recommend_vendors':
       return `🤝 Vendor Guidance: ${p.category?.toUpperCase() || 'VENDORS'}`;
     case 'analyze_event_readiness':
@@ -195,6 +232,8 @@ async function sendMessage() {
         eventType: currentEvent.value.eventType,
         budget: currentEvent.value.plannedBudgetMinor / 100,
         guestCount: currentEvent.value.expectedGuestCount,
+        startDate: currentEvent.value.startDate,
+        daysUntil: calculateDaysUntil(currentEvent.value.startDate),
       }
     : null;
 
@@ -257,27 +296,30 @@ async function sendMessage() {
 
             // Synchronize launch checklist tasks into store
             if (a2uiPayload?.payload?.checklist?.milestone_phases) {
-              const phases = a2uiPayload.payload.checklist.milestone_phases;
-              for (const p of phases) {
-                for (const t of p.tasks) {
-                  const alreadyExists = state.tasks.some(
-                    (existingTask) => existingTask.eventId === e.id && existingTask.taskName === t.title
-                  );
-                  if (!alreadyExists) {
-                    state.tasks.push({
-                      id: `task-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-                      eventId: e.id,
-                      taskName: t.title,
-                      assignedTo: 'Event Organizer',
-                      dueDate: e.start_date,
-                      priority: (t.priority?.toLowerCase() === 'urgent' ? 'high' : t.priority?.toLowerCase()) || 'medium',
-                      status: 'pending',
-                      category: p.timeline?.includes('Early') ? 'Planning' : (p.timeline?.includes('Mid') ? 'Vendor Management' : 'Day-of Execution'),
-                      notes: `Auto-generated by PlanCraft ADK for ${e.name}`,
-                    });
-                  }
-                }
-              }
+              actions.applyMilestoneChecklist(
+                e.id,
+                e.name,
+                e.start_date,
+                a2uiPayload.payload.checklist.milestone_phases
+              );
+            }
+          }
+
+          // Synchronize generated checklist tasks directly to active selected event in store
+          if (
+            a2uiPayload?.type === 'generate_checklist_tasks' &&
+            a2uiPayload?.payload?.milestone_phases
+          ) {
+            const targetEventId = a2uiPayload.payload.event_id || currentEvent.value?.id;
+            const targetEvent =
+              state.events.find((ev) => ev.id === targetEventId) || currentEvent.value;
+            if (targetEvent) {
+              actions.applyMilestoneChecklist(
+                targetEvent.id,
+                targetEvent.name,
+                targetEvent.startDate,
+                a2uiPayload.payload.milestone_phases
+              );
             }
           }
         }
@@ -467,6 +509,59 @@ function getFollowUpActions(msg: ChatMessage): string[] {
     '📋 Suggest key planning tasks',
   ];
 }
+
+function isTaskInChecklist(taskTitle: string): boolean {
+  const targetId = currentEvent.value?.id;
+  if (!targetId || !taskTitle) return false;
+  return state.tasks.some(
+    (t) => t.eventId === targetId && t.taskName.trim().toLowerCase() === taskTitle.trim().toLowerCase()
+  );
+}
+
+function handleAddSingleTask(task: any, timeline?: string) {
+  if (!currentEvent.value || !task?.title) return;
+  const category = timeline?.includes('Early')
+    ? 'Planning'
+    : timeline?.includes('Mid')
+    ? 'Vendor Management'
+    : timeline?.includes('Countdown')
+    ? 'Final Preparations'
+    : 'Day-of Execution';
+
+  const rawPriority = (task.priority || 'medium').toLowerCase();
+  const priority =
+    rawPriority === 'urgent' || rawPriority === 'high' ? 'high' : rawPriority === 'low' ? 'low' : 'medium';
+
+  actions.addTask({
+    eventId: currentEvent.value.id,
+    taskName: task.title,
+    assignedTo: 'Event Organizer',
+    dueDate: currentEvent.value.startDate || new Date().toISOString().split('T')[0],
+    priority: priority as any,
+    category,
+    notes: `Auto-generated by PlanCraft AI for ${currentEvent.value.name}`,
+  });
+}
+
+function handleSyncChecklist(msg: ChatMessage) {
+  const p = msg.a2uiData?.payload;
+  if (!p?.milestone_phases) return;
+  const targetEventId = p.event_id || currentEvent.value?.id;
+  const targetEvent = state.events.find((e) => e.id === targetEventId) || currentEvent.value;
+  if (targetEvent) {
+    actions.applyMilestoneChecklist(
+      targetEvent.id,
+      targetEvent.name,
+      targetEvent.startDate,
+      p.milestone_phases
+    );
+  }
+}
+
+function navigateToTasksTab() {
+  actions.setActiveTab('checklist');
+  actions.closeAgentChatModal();
+}
 </script>
 
 <template>
@@ -483,7 +578,7 @@ function getFollowUpActions(msg: ChatMessage): string[] {
               <span class="agent-title">PlanCraft ADK Assistant</span>
               <span class="status-indicator" :class="{ online: isConnected }">
                 <span class="dot"></span>
-                {{ isConnected ? 'ADK Service Connected' : 'Connecting to Port 8000...' }}
+                {{ isConnected ? 'AI Agent Online' : 'Connecting to agent...' }}
               </span>
             </div>
             <div class="agent-subtext">
@@ -732,6 +827,12 @@ function getFollowUpActions(msg: ChatMessage): string[] {
                         </button>
                         <button
                           class="action-pill"
+                          @click.stop="selectEventIntoChat(e, 'checklist')"
+                        >
+                          📋 Milestone Checklist
+                        </button>
+                        <button
+                          class="action-pill"
                           @click.stop="selectEventIntoChat(e, 'runsheet')"
                         >
                           ⏱️ Day-Of Run Sheet
@@ -880,8 +981,54 @@ function getFollowUpActions(msg: ChatMessage): string[] {
 
                 <!-- Checklist Card -->
                 <div v-else-if="msg.a2uiData.type === 'generate_checklist_tasks'" class="a2ui-body">
+                  <!-- Event Context & Sync Status Banner -->
+                  <div
+                    class="checklist-sync-header-banner"
+                    style="
+                      display: flex;
+                      align-items: center;
+                      justify-content: space-between;
+                      flex-wrap: wrap;
+                      gap: 8px;
+                      background: rgba(99, 102, 241, 0.08);
+                      border: 1px solid rgba(99, 102, 241, 0.22);
+                      padding: 8px 12px;
+                      border-radius: 8px;
+                      margin-bottom: 10px;
+                    "
+                  >
+                    <div style="display: flex; align-items: center; gap: 6px; font-size: 0.8rem">
+                      <CheckCircle2 :size="15" style="color: var(--success); flex-shrink: 0" />
+                      <span>
+                        Updated for: <strong>{{ msg.a2uiData.payload.event_name || currentEvent?.name || 'Selected Event' }}</strong>
+                        <span v-if="msg.a2uiData.payload.days_remaining !== undefined" style="color: var(--text-muted); font-size: 0.74rem">
+                          ({{ msg.a2uiData.payload.days_remaining }} days away)
+                        </span>
+                      </span>
+                    </div>
+
+                    <div style="display: flex; align-items: center; gap: 6px">
+                      <button
+                        class="btn btn-sm btn-primary"
+                        style="font-size: 0.7rem; padding: 3px 8px"
+                        @click.stop="handleSyncChecklist(msg)"
+                        title="Synchronize all generated tasks with event checklist"
+                      >
+                        📥 Re-sync All Tasks
+                      </button>
+                      <button
+                        class="btn btn-sm btn-secondary"
+                        style="font-size: 0.7rem; padding: 3px 8px"
+                        @click.stop="navigateToTasksTab"
+                        title="Switch to checklist view"
+                      >
+                        View Checklist →
+                      </button>
+                    </div>
+                  </div>
+
                   <div class="card-instruction-hint">
-                    💡 Click any task below to select it into chat:
+                    💡 Tasks are synchronized to your event. Click any task below to ask PlanCraft AI for execution advice:
                   </div>
                   <div v-if="msg.a2uiData.payload.suggested_immediate_action" class="immediate-action-alert">
                     ⚡ <strong>Immediate Focus:</strong> {{ msg.a2uiData.payload.suggested_immediate_action }}
@@ -909,12 +1056,30 @@ function getFollowUpActions(msg: ChatMessage): string[] {
                           </span>
                           <span style="font-size: 0.8rem; font-weight: 500">{{ task.title }}</span>
                         </div>
-                        <button
-                          class="btn-select-chip"
-                          @click.stop="selectIntoChat(`How do I complete task: '${task.title}' for my celebration?`)"
-                        >
-                          Select ↗
-                        </button>
+                        <div style="display: flex; align-items: center; gap: 6px">
+                          <span
+                            v-if="isTaskInChecklist(task.title)"
+                            class="badge badge-success"
+                            style="font-size: 0.65rem"
+                          >
+                            ✓ In Checklist
+                          </span>
+                          <button
+                            v-else
+                            class="btn-add-task-chip"
+                            style="background: var(--surface-bg); color: var(--primary); font-weight: 600; padding: 2px 6px; border-radius: 4px; border: 1px solid var(--surface-border); font-size: 0.72rem; cursor: pointer"
+                            @click.stop="handleAddSingleTask(task, phase.timeline)"
+                            title="Add this task to checklist"
+                          >
+                            + Add to Event
+                          </button>
+                          <button
+                            class="btn-select-chip"
+                            @click.stop="selectIntoChat(`How do I complete task: '${task.title}' for my celebration?`)"
+                          >
+                            Select ↗
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>

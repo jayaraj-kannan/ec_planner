@@ -134,7 +134,7 @@ function exportCSV() {
 
         <button class="btn btn-primary btn-sm" @click="isAddGuestModalOpen = true">
           <Plus :size="14" />
-          <span>+ Add Guest</span>
+          <span>Add Guest</span>
         </button>
       </div>
     </div>
@@ -193,51 +193,37 @@ function exportCSV() {
     <div class="card" style="padding: 16px 20px">
       <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px">
         <!-- Search box -->
-        <div style="display: flex; align-items: center; gap: 8px; flex: 1; max-width: 320px; background: var(--surface-subtle); padding: 8px 12px; border-radius: var(--radius-md); border: 1px solid var(--surface-border)">
+        <div
+          style="display: flex; align-items: center; gap: 8px; flex: 1; max-width: 320px; background: var(--surface-subtle); padding: 8px 12px; border-radius: var(--radius-md); border: 1px solid var(--surface-border)">
           <Search :size="16" style="color: var(--text-light)" />
-          <input
-            v-model="searchQuery"
-            type="text"
-            placeholder="Search name, family, phone..."
-            style="border: none; background: transparent; outline: none; width: 100%; font-size: 0.88rem"
-          />
+          <input v-model="searchQuery" type="text" placeholder="Search name, family, phone..."
+            style="border: none; background: transparent; outline: none; width: 100%; font-size: 0.88rem" />
         </div>
 
         <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center">
           <!-- Status filter -->
           <div style="display: flex; gap: 6px">
-            <button
-              class="btn btn-sm"
-              :class="selectedRSVPFilter === 'all' ? 'btn-primary' : 'btn-secondary'"
-              @click="selectedRSVPFilter = 'all'"
-            >
+            <button class="btn btn-sm" :class="selectedRSVPFilter === 'all' ? 'btn-primary' : 'btn-secondary'"
+              @click="selectedRSVPFilter = 'all'">
               All
             </button>
-            <button
-              class="btn btn-sm"
-              :class="selectedRSVPFilter === 'confirmed' ? 'btn-primary' : 'btn-secondary'"
-              @click="selectedRSVPFilter = 'confirmed'"
-            >
+            <button class="btn btn-sm" :class="selectedRSVPFilter === 'confirmed' ? 'btn-primary' : 'btn-secondary'"
+              @click="selectedRSVPFilter = 'confirmed'">
               Confirmed
             </button>
-            <button
-              class="btn btn-sm"
-              :class="selectedRSVPFilter === 'pending' ? 'btn-primary' : 'btn-secondary'"
-              @click="selectedRSVPFilter = 'pending'"
-            >
+            <button class="btn btn-sm" :class="selectedRSVPFilter === 'pending' ? 'btn-primary' : 'btn-secondary'"
+              @click="selectedRSVPFilter = 'pending'">
               Pending
             </button>
-            <button
-              class="btn btn-sm"
-              :class="selectedRSVPFilter === 'declined' ? 'btn-primary' : 'btn-secondary'"
-              @click="selectedRSVPFilter = 'declined'"
-            >
+            <button class="btn btn-sm" :class="selectedRSVPFilter === 'declined' ? 'btn-primary' : 'btn-secondary'"
+              @click="selectedRSVPFilter = 'declined'">
               Declined
             </button>
           </div>
 
           <!-- Category filter -->
-          <select v-model="selectedCategory" class="form-select" style="width: auto; padding: 6px 12px; font-size: 0.82rem">
+          <select v-model="selectedCategory" class="form-select"
+            style="width: auto; padding: 6px 12px; font-size: 0.82rem">
             <option value="all">All Groups</option>
             <option value="Bride Family">Bride Family</option>
             <option value="Groom Family">Groom Family</option>
@@ -255,7 +241,8 @@ function exportCSV() {
       <div style="overflow-x: auto">
         <table style="width: 100%; border-collapse: collapse; font-size: 0.88rem; text-align: left">
           <thead>
-            <tr style="border-bottom: 2px solid var(--surface-border); color: var(--text-muted); font-size: 0.78rem; text-transform: uppercase">
+            <tr
+              style="border-bottom: 2px solid var(--surface-border); color: var(--text-muted); font-size: 0.78rem; text-transform: uppercase">
               <th style="padding: 10px 14px">Guest / Family Contact</th>
               <th style="padding: 10px 14px">Affiliation</th>
               <th style="padding: 10px 14px">Pax</th>
@@ -266,11 +253,7 @@ function exportCSV() {
             </tr>
           </thead>
           <tbody>
-            <tr
-              v-for="g in filteredGuests"
-              :key="g.id"
-              style="border-bottom: 1px solid var(--surface-border)"
-            >
+            <tr v-for="g in filteredGuests" :key="g.id" style="border-bottom: 1px solid var(--surface-border)">
               <td style="padding: 14px">
                 <div style="font-weight: 700; color: var(--text-main); font-size: 0.95rem">
                   {{ g.guestName }}
@@ -278,7 +261,8 @@ function exportCSV() {
                 <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px">
                   {{ g.familyName || 'Party' }} • {{ g.mobileNumber }}
                 </div>
-                <div v-if="g.notes" style="font-size: 0.72rem; color: var(--text-light); font-style: italic; margin-top: 2px">
+                <div v-if="g.notes"
+                  style="font-size: 0.72rem; color: var(--text-light); font-style: italic; margin-top: 2px">
                   Note: {{ g.notes }}
                 </div>
               </td>
@@ -297,16 +281,13 @@ function exportCSV() {
 
               <!-- Quick RSVP Status Toggle button -->
               <td style="padding: 14px">
-                <button
-                  @click="quickToggleRSVP(g.id, g.rsvpStatus)"
+                <button @click="quickToggleRSVP(g.id, g.rsvpStatus)"
                   style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: var(--radius-full); font-size: 0.78rem; font-weight: 700; cursor: pointer; transition: all 0.15s ease"
                   :class="{
                     'badge-success': g.rsvpStatus === 'confirmed',
                     'badge-warning': g.rsvpStatus === 'pending',
                     'badge-danger': g.rsvpStatus === 'declined',
-                  }"
-                  title="Click to toggle RSVP status"
-                >
+                  }" title="Click to toggle RSVP status">
                   <CheckCircle2 v-if="g.rsvpStatus === 'confirmed'" :size="13" />
                   <Clock v-else-if="g.rsvpStatus === 'pending'" :size="13" />
                   <XCircle v-else :size="13" />
@@ -321,11 +302,7 @@ function exportCSV() {
               </td>
 
               <td style="padding: 14px">
-                <span
-                  v-if="g.accommodationRequired"
-                  class="badge badge-info"
-                  style="font-size: 0.72rem"
-                >
+                <span v-if="g.accommodationRequired" class="badge badge-info" style="font-size: 0.72rem">
                   🏨 REQUIRED
                 </span>
                 <span v-else style="font-size: 0.78rem; color: var(--text-light)">
@@ -334,12 +311,8 @@ function exportCSV() {
               </td>
 
               <td style="padding: 14px; text-align: right">
-                <button
-                  class="btn-icon"
-                  style="color: var(--text-light)"
-                  @click="actions.deleteGuest(g.id)"
-                  title="Remove guest"
-                >
+                <button class="btn-icon" style="color: var(--text-light)" @click="actions.deleteGuest(g.id)"
+                  title="Remove guest">
                   <Trash2 :size="16" />
                 </button>
               </td>
@@ -366,23 +339,14 @@ function exportCSV() {
         <div class="modal-body">
           <div class="form-group">
             <label class="form-label">Primary Guest / Family Head Name</label>
-            <input
-              v-model="newGuest.guestName"
-              type="text"
-              class="form-input"
-              placeholder="e.g. Ramesh & Gayatri Murthy"
-            />
+            <input v-model="newGuest.guestName" type="text" class="form-input"
+              placeholder="e.g. Ramesh & Gayatri Murthy" />
           </div>
 
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px">
             <div class="form-group">
               <label class="form-label">Family / Group Name</label>
-              <input
-                v-model="newGuest.familyName"
-                type="text"
-                class="form-input"
-                placeholder="e.g. Murthy Clan"
-              />
+              <input v-model="newGuest.familyName" type="text" class="form-input" placeholder="e.g. Murthy Clan" />
             </div>
 
             <div class="form-group">
@@ -417,12 +381,7 @@ function exportCSV() {
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px">
             <div class="form-group">
               <label class="form-label">Mobile Number</label>
-              <input
-                v-model="newGuest.mobileNumber"
-                type="text"
-                class="form-input"
-                placeholder="+91 98450 00000"
-              />
+              <input v-model="newGuest.mobileNumber" type="text" class="form-input" placeholder="+91 98450 00000" />
             </div>
 
             <div class="form-group">
@@ -445,12 +404,8 @@ function exportCSV() {
 
           <div class="form-group">
             <label class="form-label">Special Notes or Flight Timings</label>
-            <textarea
-              v-model="newGuest.notes"
-              rows="2"
-              class="form-textarea"
-              placeholder="e.g. Arriving Bangalore airport at 11 AM, needs ground floor room..."
-            ></textarea>
+            <textarea v-model="newGuest.notes" rows="2" class="form-textarea"
+              placeholder="e.g. Arriving Bangalore airport at 11 AM, needs ground floor room..."></textarea>
           </div>
         </div>
 
@@ -517,22 +472,44 @@ function exportCSV() {
   margin-top: 1px;
 }
 
-.text-primary { color: var(--primary); }
-.text-danger { color: var(--danger); }
-.text-warning { color: var(--warning); }
-.text-success { color: var(--success); }
-.text-info { color: var(--info); }
-.text-main { color: var(--text-main); }
-.font-bold { font-weight: 700; }
+.text-primary {
+  color: var(--primary);
+}
+
+.text-danger {
+  color: var(--danger);
+}
+
+.text-warning {
+  color: var(--warning);
+}
+
+.text-success {
+  color: var(--success);
+}
+
+.text-info {
+  color: var(--info);
+}
+
+.text-main {
+  color: var(--text-main);
+}
+
+.font-bold {
+  font-weight: 700;
+}
 
 @media (max-width: 640px) {
   .guest-metrics-grid {
     grid-template-columns: 1fr 1fr;
     gap: 8px;
   }
+
   .metric-card {
     padding: 8px 10px;
   }
+
   .metric-val {
     font-size: 0.98rem;
   }

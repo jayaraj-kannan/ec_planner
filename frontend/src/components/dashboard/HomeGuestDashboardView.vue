@@ -84,7 +84,7 @@ const slides: CarouselSlide[] = [
       '“Draft the day-of run sheet with 15-minute buffers for photographer delays”',
       '“Compare 3 sound & lighting vendors with standard contractual clauses”',
     ],
-    ctaLabel: 'Try AI Copilot Demo Now',
+    ctaLabel: 'Launch AI Copilot Now',
     ctaType: 'copilot',
   },
   {

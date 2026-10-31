@@ -31,7 +31,7 @@ const newExpense = reactive({
   paymentMethod: 'UPI' as const,
   paymentStatus: 'paid' as PaymentStatus,
   invoiceNumber: '',
-  receiptName: 'Receipt_Mock.pdf',
+  receiptName: 'Receipt_Attachment.pdf',
   expenseDate: new Date().toISOString().split('T')[0],
 });
 
@@ -105,7 +105,7 @@ function handleAddExpense() {
 
       <button class="btn btn-primary btn-sm" @click="isAddExpenseModalOpen = true">
         <Plus :size="15" />
-        <span>+ Record Expense</span>
+        <span>Record Expense</span>
       </button>
     </div>
 
@@ -152,10 +152,7 @@ function handleAddExpense() {
       <!-- 5: Remaining Buffer -->
       <div class="card metric-card">
         <div class="metric-label">Remaining Buffer</div>
-        <div
-          class="metric-val"
-          :class="budgetMetrics.isOverBudget ? 'text-danger' : 'text-main'"
-        >
+        <div class="metric-val" :class="budgetMetrics.isOverBudget ? 'text-danger' : 'text-main'">
           {{ formatCurrency(budgetMetrics.remainingBudgetMinor, budgetMetrics.currency) }}
         </div>
         <div class="metric-hint" :class="budgetMetrics.isOverBudget ? 'text-danger' : 'text-success'">
@@ -179,32 +176,23 @@ function handleAddExpense() {
       </div>
 
       <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px">
-        <div
-          v-for="cat in categorySpending"
-          :key="cat.id"
-          style="
+        <div v-for="cat in categorySpending" :key="cat.id" style="
             padding: 14px;
             background: var(--surface-subtle);
             border-radius: var(--radius-md);
             border: 1px solid var(--surface-border);
-          "
-        >
+          ">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px">
             <span style="font-weight: 700; font-size: 0.88rem">{{ cat.name }}</span>
-            <span
-              style="font-weight: 700; font-size: 0.8rem"
-              :style="{ color: cat.isOver ? 'var(--danger)' : 'var(--primary)' }"
-            >
+            <span style="font-weight: 700; font-size: 0.8rem"
+              :style="{ color: cat.isOver ? 'var(--danger)' : 'var(--primary)' }">
               {{ cat.percent }}%
             </span>
           </div>
 
           <div class="progress-track" style="margin-bottom: 6px">
-            <div
-              class="progress-fill"
-              :class="cat.isOver ? 'danger' : 'primary'"
-              :style="{ width: Math.min(100, cat.percent) + '%' }"
-            ></div>
+            <div class="progress-fill" :class="cat.isOver ? 'danger' : 'primary'"
+              :style="{ width: Math.min(100, cat.percent) + '%' }"></div>
           </div>
 
           <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-muted)">
@@ -230,7 +218,8 @@ function handleAddExpense() {
 
         <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap">
           <!-- Status filter -->
-          <select v-model="selectedStatus" class="form-select" style="width: auto; padding: 6px 12px; font-size: 0.82rem">
+          <select v-model="selectedStatus" class="form-select"
+            style="width: auto; padding: 6px 12px; font-size: 0.82rem">
             <option value="all">All Payment Statuses</option>
             <option value="paid">Paid</option>
             <option value="partial">Partially Paid</option>
@@ -243,7 +232,8 @@ function handleAddExpense() {
       <div style="overflow-x: auto">
         <table style="width: 100%; border-collapse: collapse; font-size: 0.88rem; text-align: left">
           <thead>
-            <tr style="border-bottom: 2px solid var(--surface-border); color: var(--text-muted); font-size: 0.78rem; text-transform: uppercase">
+            <tr
+              style="border-bottom: 2px solid var(--surface-border); color: var(--text-muted); font-size: 0.78rem; text-transform: uppercase">
               <th style="padding: 10px 12px">Date</th>
               <th style="padding: 10px 12px">Description & Vendor</th>
               <th style="padding: 10px 12px">Amount + GST</th>
@@ -254,11 +244,8 @@ function handleAddExpense() {
             </tr>
           </thead>
           <tbody>
-            <tr
-              v-for="exp in filteredExpenses"
-              :key="exp.id"
-              style="border-bottom: 1px solid var(--surface-border); transition: background 0.15s ease"
-            >
+            <tr v-for="exp in filteredExpenses" :key="exp.id"
+              style="border-bottom: 1px solid var(--surface-border); transition: background 0.15s ease">
               <td style="padding: 12px; color: var(--text-muted); font-size: 0.82rem">
                 {{ exp.expenseDate }}
               </td>
@@ -271,7 +258,8 @@ function handleAddExpense() {
                   {{ formatCurrency(exp.amountMinor + exp.taxAmountMinor, exp.currency) }}
                 </div>
                 <div style="font-size: 0.72rem; color: var(--text-light)">
-                  Base: {{ formatCurrency(exp.amountMinor, exp.currency) }} + GST: {{ formatCurrency(exp.taxAmountMinor, exp.currency) }}
+                  Base: {{ formatCurrency(exp.amountMinor, exp.currency) }} + GST: {{ formatCurrency(exp.taxAmountMinor,
+                  exp.currency) }}
                 </div>
               </td>
               <td style="padding: 12px">
@@ -284,32 +272,19 @@ function handleAddExpense() {
                 </div>
               </td>
               <td style="padding: 12px">
-                <span
-                  v-if="exp.paymentStatus === 'paid'"
-                  class="badge badge-success"
-                >
+                <span v-if="exp.paymentStatus === 'paid'" class="badge badge-success">
                   PAID IN FULL
                 </span>
-                <span
-                  v-else-if="exp.paymentStatus === 'partial'"
-                  class="badge badge-warning"
-                >
+                <span v-else-if="exp.paymentStatus === 'partial'" class="badge badge-warning">
                   PARTIAL ({{ formatCurrency(exp.paidAmountMinor, exp.currency) }})
                 </span>
-                <span
-                  v-else
-                  class="badge badge-danger"
-                >
+                <span v-else class="badge badge-danger">
                   PENDING
                 </span>
               </td>
               <td style="padding: 12px; text-align: right">
-                <button
-                  class="btn-icon"
-                  style="color: var(--text-light)"
-                  @click="actions.deleteExpense(exp.id)"
-                  title="Remove expense"
-                >
+                <button class="btn-icon" style="color: var(--text-light)" @click="actions.deleteExpense(exp.id)"
+                  title="Remove expense">
                   <Trash2 :size="16" />
                 </button>
               </td>
@@ -336,12 +311,8 @@ function handleAddExpense() {
         <div class="modal-body">
           <div class="form-group">
             <label class="form-label">Expense Description</label>
-            <input
-              v-model="newExpense.description"
-              type="text"
-              class="form-input"
-              placeholder="e.g. Stage floral entrance arch advance"
-            />
+            <input v-model="newExpense.description" type="text" class="form-input"
+              placeholder="e.g. Stage floral entrance arch advance" />
           </div>
 
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px">
@@ -354,12 +325,8 @@ function handleAddExpense() {
 
             <div class="form-group">
               <label class="form-label">Vendor / Service Provider</label>
-              <input
-                v-model="newExpense.vendorName"
-                type="text"
-                class="form-input"
-                placeholder="e.g. Bloom Florals, Taj Banqueting..."
-              />
+              <input v-model="newExpense.vendorName" type="text" class="form-input"
+                placeholder="e.g. Bloom Florals, Taj Banqueting..." />
             </div>
           </div>
 
@@ -400,12 +367,7 @@ function handleAddExpense() {
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px">
             <div class="form-group">
               <label class="form-label">Invoice / Reference #</label>
-              <input
-                v-model="newExpense.invoiceNumber"
-                type="text"
-                class="form-input"
-                placeholder="INV-2026-001"
-              />
+              <input v-model="newExpense.invoiceNumber" type="text" class="form-input" placeholder="INV-2026-001" />
             </div>
 
             <div class="form-group">
@@ -414,19 +376,17 @@ function handleAddExpense() {
             </div>
           </div>
 
-          <!-- Mock Receipt Upload -->
+          <!-- Receipt File Attachment -->
           <div class="form-group">
             <label class="form-label">Receipt File Attachment</label>
-            <div
-              style="
+            <div style="
                 border: 2px dashed var(--surface-border-strong);
                 border-radius: var(--radius-md);
                 padding: 16px;
                 text-align: center;
                 background: var(--surface-subtle);
                 cursor: pointer;
-              "
-            >
+              ">
               <FileUp :size="20" style="color: var(--primary); margin-bottom: 4px" />
               <div style="font-size: 0.82rem; font-weight: 600; color: var(--text-main)">
                 {{ newExpense.receiptName || 'Click to select PDF or image' }}
@@ -499,21 +459,40 @@ function handleAddExpense() {
   margin-top: 1px;
 }
 
-.text-primary { color: var(--primary); }
-.text-danger { color: var(--danger); }
-.text-warning { color: var(--warning); }
-.text-success { color: var(--success); }
-.text-main { color: var(--text-main); }
-.font-bold { font-weight: 700; }
+.text-primary {
+  color: var(--primary);
+}
+
+.text-danger {
+  color: var(--danger);
+}
+
+.text-warning {
+  color: var(--warning);
+}
+
+.text-success {
+  color: var(--success);
+}
+
+.text-main {
+  color: var(--text-main);
+}
+
+.font-bold {
+  font-weight: 700;
+}
 
 @media (max-width: 640px) {
   .budget-metrics-grid {
     grid-template-columns: 1fr 1fr;
     gap: 8px;
   }
+
   .metric-card {
     padding: 8px 10px;
   }
+
   .metric-val {
     font-size: 0.95rem;
   }

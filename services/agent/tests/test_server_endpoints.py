@@ -106,6 +106,8 @@ class TestServerEndpoints:
                 "message": "Generate day of run sheet schedule",
                 "user_id": "test-user",
                 "event_context": {
+                    "eventId": "evt-77",
+                    "eventName": "Aarav Birthday Party",
                     "eventType": "birthday",
                 },
             },
@@ -115,7 +117,44 @@ class TestServerEndpoints:
         a2ui_parts = [p for p in data["parts"] if p.get("kind") == "a2ui"]
         assert len(a2ui_parts) >= 1
         assert a2ui_parts[0]["data"]["type"] == "generate_day_of_run_sheet"
-        assert len(a2ui_parts[0]["data"]["payload"]["timeline"]) > 0
+        payload = a2ui_parts[0]["data"]["payload"]
+        assert len(payload["timeline"]) > 0
+        assert payload["event_id"] == "evt-77"
+        assert payload["event_name"] == "Aarav Birthday Party"
+        text_part = [p for p in data["parts"] if p.get("kind") == "text"][0]
+        assert "Aarav Birthday Party" in text_part["text"]
+        assert "public" in text_part["text"].lower()
+
+    def test_chat_checklist_with_selected_event_context(self, client, monkeypatch):
+        monkeypatch.delenv("GOOGLE_API_KEY", raising=False)
+        monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+        response = client.post(
+            "/chat",
+            json={
+                "message": "Generate checklist tasks for my celebration",
+                "user_id": "test-user",
+                "event_context": {
+                    "eventId": "evt-birthday-456",
+                    "eventName": "Rohan 10th Birthday Adventure",
+                    "eventType": "birthday",
+                    "startDate": "2026-11-25",
+                    "daysUntil": 28,
+                },
+            },
+        )
+        assert response.status_code == 200
+        data = response.json()
+        a2ui_parts = [p for p in data["parts"] if p.get("kind") == "a2ui"]
+        assert len(a2ui_parts) >= 1
+        assert a2ui_parts[0]["data"]["type"] == "generate_checklist_tasks"
+        payload = a2ui_parts[0]["data"]["payload"]
+        assert payload["event_id"] == "evt-birthday-456"
+        assert payload["event_name"] == "Rohan 10th Birthday Adventure"
+        assert payload["event_type"] == "birthday"
+        assert payload["days_remaining"] == 28
+        assert len(payload["milestone_phases"]) > 0
+        text_part = [p for p in data["parts"] if p.get("kind") == "text"][0]
+        assert "Rohan 10th Birthday Adventure" in text_part["text"]
 
     def test_events_rest_crud_lifecycle(self, client):
         # 1. Create event via POST /api/events

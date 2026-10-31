@@ -29,6 +29,8 @@ export const INITIAL_EVENTS: EventItem[] = [
     theme: 'Royal Pastel Floral Elegance',
     dressCode: 'Traditional Indian / Indo-Western Pastels',
     specialInstructions: 'Valet parking available at Gate 2. Haldi and Mehendi in morning, Reception at 7:00 PM.',
+    isRunSheetLaunched: true,
+    runSheetHashCode: 'rs-priya-rahul-9a8f',
     createdAt: '2026-09-01T10:00:00Z',
   },
   {
@@ -48,6 +50,7 @@ export const INITIAL_EVENTS: EventItem[] = [
     theme: 'Jungle Safari & Hot Air Balloons',
     dressCode: 'Casual & Bright Colors',
     specialInstructions: 'Kids play zone opens at 4:30 PM. Cake cutting at 6:00 PM sharp.',
+    isRunSheetLaunched: false,
     createdAt: '2026-10-01T14:30:00Z',
   },
   {
@@ -67,6 +70,7 @@ export const INITIAL_EVENTS: EventItem[] = [
     theme: 'Innovation in Motion — Electric Blue & Platinum',
     dressCode: 'Black Tie / Formal Evening Suit',
     specialInstructions: 'Badges must be scanned at entrance. Live webcast starts at 6:30 PM.',
+    isRunSheetLaunched: false,
     createdAt: '2026-09-15T09:00:00Z',
   },
 ];

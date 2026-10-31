@@ -58,23 +58,16 @@ function confirmDeleteEvent() {
         </p>
       </div>
 
-      <button
-        class="btn btn-primary"
-        @click="actions.openCreateEventModal()"
-      >
+      <button class="btn btn-primary" @click="actions.openCreateEventModal()">
         <Plus :size="16" />
-        <span>+ Create New Event</span>
+        <span>Create New Event</span>
       </button>
     </div>
 
     <!-- Empty State -->
-    <div
-      v-if="state.events.length === 0"
-      class="card empty-events-card"
-      style="text-align: center; padding: 48px 24px; display: flex; flex-direction: column; align-items: center; gap: 16px"
-    >
-      <div
-        style="
+    <div v-if="state.events.length === 0" class="card empty-events-card"
+      style="text-align: center; padding: 48px 24px; display: flex; flex-direction: column; align-items: center; gap: 16px">
+      <div style="
           width: 56px;
           height: 56px;
           border-radius: 50%;
@@ -83,47 +76,32 @@ function confirmDeleteEvent() {
           display: flex;
           align-items: center;
           justify-content: center;
-        "
-      >
+        ">
         <CalendarDays :size="28" />
       </div>
       <div>
         <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 6px">No Celebrations Found</h3>
         <p style="font-size: 0.88rem; color: var(--text-muted); max-width: 420px; margin: 0 auto">
-          You don't have any active celebrations. Start by creating a wedding, birthday, or custom celebration with guided budgeting and AI assistance.
+          You don't have any active celebrations. Start by creating a wedding, birthday, or custom celebration with
+          guided budgeting and AI assistance.
         </p>
       </div>
-      <button
-        class="btn btn-primary"
-        style="margin-top: 8px"
-        @click="actions.openCreateEventModal()"
-      >
+      <button class="btn btn-primary" style="margin-top: 8px" @click="actions.openCreateEventModal()">
         <Plus :size="16" />
         <span>+ Create Your First Celebration</span>
       </button>
     </div>
 
     <!-- Events Grid -->
-    <div
-      v-else
-      class="events-grid"
-      style="display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 20px"
-    >
-      <div
-        v-for="evt in state.events"
-        :key="evt.id"
-        class="card event-card"
-        style="display: flex; flex-direction: column; justify-content: space-between; position: relative"
-        :style="{
+    <div v-else class="events-grid"
+      style="display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 20px">
+      <div v-for="evt in state.events" :key="evt.id" class="card event-card"
+        style="display: flex; flex-direction: column; justify-content: space-between; position: relative" :style="{
           border: evt.id === state.activeEventId ? '2px solid var(--primary)' : '1px solid var(--surface-border)',
           boxShadow: evt.id === state.activeEventId ? '0 6px 20px rgba(15, 118, 110, 0.15)' : 'var(--shadow-sm)',
-        }"
-      >
+        }">
         <!-- Active indicator badge -->
-        <div
-          v-if="evt.id === state.activeEventId"
-          class="active-event-badge"
-          style="
+        <div v-if="evt.id === state.activeEventId" class="active-event-badge" style="
             position: absolute;
             top: 14px;
             right: 14px;
@@ -136,8 +114,7 @@ function confirmDeleteEvent() {
             display: flex;
             align-items: center;
             gap: 4px;
-          "
-        >
+          ">
           <CheckCircle2 :size="12" />
           <span>CURRENT ACTIVE</span>
         </div>
@@ -157,7 +134,8 @@ function confirmDeleteEvent() {
             {{ evt.name }}
           </h3>
 
-          <div style="display: flex; flex-direction: column; gap: 8px; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px">
+          <div
+            style="display: flex; flex-direction: column; gap: 8px; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px">
             <div style="display: flex; align-items: center; gap: 8px">
               <Calendar :size="15" style="color: var(--primary)" />
               <span>{{ evt.startDate }}</span>
@@ -178,33 +156,21 @@ function confirmDeleteEvent() {
         </div>
 
         <!-- Action button -->
-        <div
-          class="event-card-footer"
-          style="padding-top: 14px; border-top: 1px solid var(--surface-border); display: flex; justify-content: space-between; align-items: center; gap: 8px"
-        >
-          <button
-            class="btn btn-outline-danger btn-sm btn-delete-event"
-            title="Delete this celebration"
-            @click.stop="promptDeleteEvent(evt)"
-          >
+        <div class="event-card-footer"
+          style="padding-top: 14px; border-top: 1px solid var(--surface-border); display: flex; justify-content: space-between; align-items: center; gap: 8px">
+          <button class="btn btn-outline-danger btn-sm btn-delete-event" title="Delete this celebration"
+            @click.stop="promptDeleteEvent(evt)">
             <Trash2 :size="14" />
             <span>Delete</span>
           </button>
 
           <div style="display: flex; align-items: center; gap: 8px">
-            <button
-              v-if="evt.id === state.activeEventId"
-              class="btn btn-outline btn-sm"
-              @click="actions.setActiveTab('dashboard')"
-            >
+            <button v-if="evt.id === state.activeEventId" class="btn btn-outline btn-sm"
+              @click="actions.setActiveTab('dashboard')">
               <span>Open Dashboard</span>
               <ArrowRight :size="14" />
             </button>
-            <button
-              v-else
-              class="btn btn-primary btn-sm"
-              @click="switchEvent(evt.id)"
-            >
+            <button v-else class="btn btn-primary btn-sm" @click="switchEvent(evt.id)">
               <span>Switch to Event</span>
               <ArrowRight :size="14" />
             </button>
@@ -214,19 +180,12 @@ function confirmDeleteEvent() {
     </div>
 
     <!-- Delete Confirmation Modal -->
-    <div
-      v-if="isDeleteModalOpen && eventToDelete"
-      class="modal-overlay delete-modal-overlay"
-      @click.self="closeDeleteModal"
-    >
-      <div
-        class="modal-box delete-confirm-box"
-        style="max-width: 480px"
-      >
+    <div v-if="isDeleteModalOpen && eventToDelete" class="modal-overlay delete-modal-overlay"
+      @click.self="closeDeleteModal">
+      <div class="modal-box delete-confirm-box" style="max-width: 480px">
         <div class="modal-header" style="border-bottom: 1px solid var(--danger-border); background: var(--danger-bg)">
           <div style="display: flex; align-items: center; gap: 10px; color: var(--danger)">
-            <div
-              style="
+            <div style="
                 width: 34px;
                 height: 34px;
                 border-radius: 50%;
@@ -236,8 +195,7 @@ function confirmDeleteEvent() {
                 align-items: center;
                 justify-content: center;
                 box-shadow: var(--shadow-sm);
-              "
-            >
+              ">
               <AlertTriangle :size="18" style="color: var(--danger)" />
             </div>
             <div>
@@ -250,11 +208,7 @@ function confirmDeleteEvent() {
             </div>
           </div>
 
-          <button
-            class="btn-icon btn-close-delete-modal"
-            @click="closeDeleteModal"
-            title="Cancel"
-          >
+          <button class="btn-icon btn-close-delete-modal" @click="closeDeleteModal" title="Cancel">
             <X :size="18" />
           </button>
         </div>
@@ -266,8 +220,7 @@ function confirmDeleteEvent() {
           </p>
 
           <!-- Event Summary Pill -->
-          <div
-            style="
+          <div style="
               background: var(--surface-subtle);
               border: 1px solid var(--surface-border);
               border-radius: var(--radius-md);
@@ -277,8 +230,7 @@ function confirmDeleteEvent() {
               gap: 6px;
               font-size: 0.82rem;
               color: var(--text-muted);
-            "
-          >
+            ">
             <div style="display: flex; justify-content: space-between; align-items: center">
               <span class="badge badge-info" style="text-transform: uppercase">{{ eventToDelete.eventType }}</span>
               <span style="font-weight: 600; color: var(--text-main)">
@@ -290,12 +242,12 @@ function confirmDeleteEvent() {
               <span>{{ eventToDelete.startDate }}</span>
               <span>•</span>
               <MapPin :size="13" />
-              <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{ eventToDelete.venueName }}</span>
+              <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{ eventToDelete.venueName
+                }}</span>
             </div>
           </div>
 
-          <div
-            style="
+          <div style="
               background: var(--danger-bg);
               border-left: 3px solid var(--danger);
               padding: 10px 12px;
@@ -303,23 +255,17 @@ function confirmDeleteEvent() {
               font-size: 0.78rem;
               color: #991B1B;
               line-height: 1.4;
-            "
-          >
-            ⚠️ <strong>Warning:</strong> Deleting this celebration will permanently purge all associated checklist milestones, budget expenses, guest RSVP lists, and schedule activities.
+            ">
+            ⚠️ <strong>Warning:</strong> Deleting this celebration will permanently purge all associated checklist
+            milestones, budget expenses, guest RSVP lists, and schedule activities.
           </div>
         </div>
 
         <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 10px; padding: 14px 22px">
-          <button
-            class="btn btn-secondary btn-cancel-delete"
-            @click="closeDeleteModal"
-          >
+          <button class="btn btn-secondary btn-cancel-delete" @click="closeDeleteModal">
             Cancel
           </button>
-          <button
-            class="btn btn-danger btn-confirm-delete"
-            @click="confirmDeleteEvent"
-          >
+          <button class="btn btn-danger btn-confirm-delete" @click="confirmDeleteEvent">
             <Trash2 :size="15" />
             <span>Yes, Delete Celebration</span>
           </button>

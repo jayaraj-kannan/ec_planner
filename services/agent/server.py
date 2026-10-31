@@ -12,10 +12,11 @@ import json
 import os
 import sqlite3
 import uuid
+from datetime import datetime, timezone
 from typing import Any, Optional
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
@@ -256,14 +257,52 @@ def execute_matching_tool(message: str, event_ctx: Optional[dict[str, Any]] = No
     # Run-sheet timeline matching
     if any(k in msg for k in ["run sheet", "run-sheet", "schedule", "timeline", "day of", "hourly schedule"]):
         etype = ctx.get("eventType", "wedding")
+        eid = ctx.get("eventId", "")
+        ename = ctx.get("eventName", "")
         start_time = "10:00"
-        res = generate_day_of_run_sheet(event_type=etype, start_time=start_time, duration_hours=6)
+        res = generate_day_of_run_sheet(
+            event_type=etype,
+            start_time=start_time,
+            duration_hours=6,
+            event_id=eid,
+            event_name=ename,
+        )
+        if eid and "event_id" not in res:
+            res["event_id"] = eid
+        if ename and "event_name" not in res:
+            res["event_name"] = ename
         return {"tool": "generate_day_of_run_sheet", "result": res}
 
     # Checklist matching
     if any(k in msg for k in ["checklist", "tasks", "to do", "to-do", "what should i do", "next steps"]):
         etype = ctx.get("eventType", "wedding")
-        res = generate_checklist_tasks(event_type=etype, days_until_event=60)
+        for possible_type in ["wedding", "reception", "birthday", "anniversary", "engagement", "baby_shower", "baby shower", "corporate", "festival"]:
+            if possible_type in msg:
+                etype = possible_type.replace(" ", "_")
+                break
+
+        days = ctx.get("daysUntil")
+        if days is None and ctx.get("startDate"):
+            try:
+                sdate = datetime.strptime(str(ctx.get("startDate"))[:10], "%Y-%m-%d").date()
+                days = (sdate - datetime.now().date()).days
+            except Exception:
+                days = 60
+        if days is None:
+            days = 60
+
+        eid = ctx.get("eventId", "")
+        ename = ctx.get("eventName", "")
+        res = generate_checklist_tasks(
+            event_type=etype,
+            days_until_event=max(0, int(days)),
+            event_id=eid,
+            event_name=ename,
+        )
+        if eid and "event_id" not in res:
+            res["event_id"] = eid
+        if ename and "event_name" not in res:
+            res["event_name"] = ename
         return {"tool": "generate_checklist_tasks", "result": res}
 
     # Vendor matching
@@ -287,7 +326,6 @@ def execute_matching_tool(message: str, event_ctx: Optional[dict[str, Any]] = No
     return None
 
 
-@app.get("/")
 @app.get("/health")
 @app.get("/ping")
 async def health():
@@ -501,11 +539,26 @@ async def chat(req: ChatRequest):
             if not chat_contents:
                 chat_contents = [req.message]
 
+            current_instruction = AGENT_INSTRUCTION
+            if req.event_context:
+                ctx_info = (
+                    f"\n\nCURRENT USER EVENT CONTEXT:\n"
+                    f"- Event ID: {req.event_context.get('eventId', 'N/A')}\n"
+                    f"- Event Name: {req.event_context.get('eventName', 'N/A')}\n"
+                    f"- Event Type: {req.event_context.get('eventType', 'wedding')}\n"
+                    f"- Planned Budget: ${req.event_context.get('budget', 0):,.2f}\n"
+                    f"- Expected Guests: {req.event_context.get('guestCount', 0)}\n"
+                    f"- Start Date: {req.event_context.get('startDate', 'N/A')}\n"
+                    f"- Days Until Event: {req.event_context.get('daysUntil', 'N/A')}\n\n"
+                    f"When generating checklist tasks, budget allocations, run sheets, or vendor questions, ALWAYS tailor your advice and tool arguments to this active selected event context unless the user explicitly requests a different celebration."
+                )
+                current_instruction += ctx_info
+
             response = client.models.generate_content(
                 model=DEFAULT_MODEL,
                 contents=chat_contents,
                 config={
-                    "system_instruction": AGENT_INSTRUCTION,
+                    "system_instruction": current_instruction,
                     "tools": all_tools,
                 },
             )
@@ -517,10 +570,28 @@ async def chat(req: ChatRequest):
                 for fn in function_calls:
                     fn_name = fn.name
                     fn_args = dict(fn.args) if fn.args else {}
+                    if fn_name in ["generate_checklist_tasks", "generate_day_of_run_sheet"] and req.event_context:
+                        if not fn_args.get("event_type") and req.event_context.get("eventType"):
+                            fn_args["event_type"] = req.event_context.get("eventType")
+                        if fn_name == "generate_checklist_tasks" and "days_until_event" not in fn_args and req.event_context.get("daysUntil") is not None:
+                            try:
+                                fn_args["days_until_event"] = int(req.event_context.get("daysUntil"))
+                            except Exception:
+                                pass
+                        if not fn_args.get("event_id") and req.event_context.get("eventId"):
+                            fn_args["event_id"] = req.event_context.get("eventId")
+                        if not fn_args.get("event_name") and req.event_context.get("eventName"):
+                            fn_args["event_name"] = req.event_context.get("eventName")
+
                     tool_fn = next((t for t in all_tools if getattr(t, "__name__", "") == fn_name), None)
                     if tool_fn:
                         try:
                             tool_result = tool_fn(**fn_args)
+                            if isinstance(tool_result, dict) and req.event_context:
+                                if "event_id" not in tool_result and req.event_context.get("eventId"):
+                                    tool_result["event_id"] = req.event_context.get("eventId")
+                                if "event_name" not in tool_result and req.event_context.get("eventName"):
+                                    tool_result["event_name"] = req.event_context.get("eventName")
                             parts.append({"kind": "a2ui", "data": {"type": fn_name, "payload": tool_result}})
                             executed_tool = True
                         except Exception as te:
@@ -624,12 +695,18 @@ async def chat(req: ChatRequest):
                     reply += f"- **{item['category']}:** ${item['recommended_amount']:,.2f} ({item['percentage']})\n"
                 reply += f"\n💡 *Expert Advice:* {data['advice']}"
             elif tname == "generate_day_of_run_sheet":
-                reply = f"### ⏱️ Day-Of Run Sheet ({data['event_type'].title()})\n\n"
+                event_title = data.get("event_name") or data["event_type"].title()
+                reply = (
+                    f"### ⏱️ Day-Of Run Sheet for {event_title}\n"
+                    f"🌐 *Public live URL is generated for this celebration so guests and coordinators can watch the itinerary in real time.*\n\n"
+                )
                 for slot in data["timeline"]:
                     reply += f"- **{slot['time']}** — **{slot['activity']}**\n  *Owner:* {slot['owner']} | *Notes:* {slot['notes']}\n"
             elif tname == "generate_checklist_tasks":
+                event_title = data.get("event_name") or data["event_type"].title()
+                days_msg = f" ({data.get('days_remaining', 0)} days away)" if "days_remaining" in data else ""
                 reply = (
-                    f"### 📋 Prioritized Checklist for {data['event_type'].title()}\n"
+                    f"### 📋 Prioritized Checklist for {event_title}{days_msg}\n"
                     f"⚡ **Immediate Action:** {data['suggested_immediate_action']}\n\n"
                 )
                 for phase in data["milestone_phases"]:
@@ -692,6 +769,235 @@ async def chat(req: ChatRequest):
         "session_id": session_id,
         "parts": parts,
     }
+
+
+# ---------------------------------------------------------
+# Real-Time WebSocket Support for Live Event Run Sheet
+# ---------------------------------------------------------
+class RunSheetConnectionManager:
+    """Manages active WebSockets and state broadcasts for live run sheets."""
+
+    def __init__(self):
+        self.active_connections: dict[str, set[WebSocket]] = {}
+        self.room_states: dict[str, dict[str, Any]] = {}
+        self.aliases: dict[str, str] = {}
+
+    def register_alias(self, id1: str, id2: str):
+        if id1 and id2 and id1 != id2:
+            self.aliases[id1] = id2
+            self.aliases[id2] = id1
+
+    def get_target_rooms(self, room_id: str) -> set[str]:
+        rooms = {room_id}
+        if room_id in self.aliases:
+            rooms.add(self.aliases[room_id])
+        return rooms
+
+    async def connect(self, websocket: WebSocket, room_id: str):
+        await websocket.accept()
+        if room_id not in self.active_connections:
+            self.active_connections[room_id] = set()
+        self.active_connections[room_id].add(websocket)
+
+        # Retrieve cached state for immediate sync
+        current_state = self.room_states.get(room_id)
+        if not current_state and room_id in self.aliases:
+            current_state = self.room_states.get(self.aliases[room_id])
+
+        await websocket.send_json({
+            "type": "connected",
+            "room_id": room_id,
+            "state": current_state,
+            "active_watchers": len(self.active_connections[room_id]),
+        })
+
+    def disconnect(self, websocket: WebSocket, room_id: str):
+        if room_id in self.active_connections:
+            self.active_connections[room_id].discard(websocket)
+            if not self.active_connections[room_id]:
+                del self.active_connections[room_id]
+
+    async def broadcast(self, room_id: str, message: dict[str, Any], sender: Optional[WebSocket] = None):
+        target_rooms = self.get_target_rooms(room_id)
+        for r in target_rooms:
+            if r not in self.room_states:
+                self.room_states[r] = {}
+            self.room_states[r]["last_update_type"] = message.get("type")
+            self.room_states[r]["last_updated_at"] = message.get("timestamp")
+
+            if message.get("type") == "delay_reported":
+                delays = self.room_states[r].setdefault("delays", {})
+                delays[message["activity_id"]] = message["delay_minutes"]
+            elif message.get("type") == "status_updated":
+                statuses = self.room_states[r].setdefault("statuses", {})
+                statuses[message["activity_id"]] = message["status"]
+            elif message.get("type") == "runsheet_launched":
+                self.room_states[r]["is_launched"] = message.get("is_launched", True)
+                if message.get("hash_code"):
+                    self.room_states[r]["hash_code"] = message["hash_code"]
+                    self.register_alias(r, message["hash_code"])
+
+        sent_conns = set()
+        for r in target_rooms:
+            conns = list(self.active_connections.get(r, set()))
+            for conn in conns:
+                if conn != sender and conn not in sent_conns:
+                    sent_conns.add(conn)
+                    try:
+                        await conn.send_json(message)
+                    except Exception:
+                        self.disconnect(conn, r)
+
+
+runsheet_manager = RunSheetConnectionManager()
+
+
+class RunSheetBroadcastRequest(BaseModel):
+    type: str
+    activity_id: Optional[str] = None
+    delay_minutes: Optional[int] = None
+    status: Optional[str] = None
+    is_launched: Optional[bool] = None
+    hash_code: Optional[str] = None
+    schedule: Optional[list[dict[str, Any]]] = None
+
+
+@app.websocket("/ws/runsheet/{room_id}")
+async def websocket_runsheet_endpoint(websocket: WebSocket, room_id: str):
+    await runsheet_manager.connect(websocket, room_id)
+    try:
+        while True:
+            data = await websocket.receive_json()
+            msg_type = data.get("type")
+            now_iso = datetime.now(timezone.utc).isoformat()
+
+            if msg_type == "report_delay":
+                activity_id = data.get("activity_id")
+                delay_minutes = int(data.get("delay_minutes", 0))
+                broadcast_msg = {
+                    "type": "delay_reported",
+                    "activity_id": activity_id,
+                    "delay_minutes": delay_minutes,
+                    "room_id": room_id,
+                    "timestamp": now_iso,
+                }
+                await websocket.send_json({"type": "ack", "action": "report_delay", "activity_id": activity_id})
+                await runsheet_manager.broadcast(room_id, broadcast_msg, sender=websocket)
+
+            elif msg_type == "update_status":
+                activity_id = data.get("activity_id")
+                status = data.get("status", "upcoming")
+                broadcast_msg = {
+                    "type": "status_updated",
+                    "activity_id": activity_id,
+                    "status": status,
+                    "room_id": room_id,
+                    "timestamp": now_iso,
+                }
+                await websocket.send_json({"type": "ack", "action": "update_status", "activity_id": activity_id})
+                await runsheet_manager.broadcast(room_id, broadcast_msg, sender=websocket)
+
+            elif msg_type == "launch_runsheet":
+                is_launched = bool(data.get("is_launched", True))
+                hash_code = data.get("hash_code")
+                broadcast_msg = {
+                    "type": "runsheet_launched",
+                    "is_launched": is_launched,
+                    "hash_code": hash_code,
+                    "room_id": room_id,
+                    "timestamp": now_iso,
+                }
+                if hash_code:
+                    runsheet_manager.register_alias(room_id, hash_code)
+                await websocket.send_json({"type": "ack", "action": "launch_runsheet", "is_launched": is_launched})
+                await runsheet_manager.broadcast(room_id, broadcast_msg, sender=websocket)
+
+            elif msg_type == "sync_activities":
+                schedule = data.get("schedule", [])
+                broadcast_msg = {
+                    "type": "activities_synced",
+                    "schedule": schedule,
+                    "room_id": room_id,
+                    "timestamp": now_iso,
+                }
+                await websocket.send_json({"type": "ack", "action": "sync_activities", "count": len(schedule)})
+                await runsheet_manager.broadcast(room_id, broadcast_msg, sender=websocket)
+
+            elif msg_type == "ping":
+                await websocket.send_json({"type": "pong", "timestamp": now_iso})
+
+            else:
+                data["timestamp"] = now_iso
+                data["room_id"] = room_id
+                await runsheet_manager.broadcast(room_id, data, sender=websocket)
+
+    except WebSocketDisconnect:
+        runsheet_manager.disconnect(websocket, room_id)
+    except Exception:
+        runsheet_manager.disconnect(websocket, room_id)
+
+
+@app.post("/api/runsheet/{room_id}/broadcast")
+async def broadcast_runsheet_event(room_id: str, req: RunSheetBroadcastRequest):
+    now_iso = datetime.now(timezone.utc).isoformat()
+    payload = req.model_dump(exclude_none=True)
+    payload["timestamp"] = now_iso
+    payload["room_id"] = room_id
+    await runsheet_manager.broadcast(room_id, payload)
+    return {
+        "status": "broadcast_sent",
+        "room_id": room_id,
+        "recipients": len(runsheet_manager.active_connections.get(room_id, [])),
+    }
+
+
+# Static Frontend SPA Serving (For Unified Cloud Run Deployment)
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+
+_dist_candidates = [
+    os.path.join(os.path.dirname(__file__), "dist"),
+    os.path.join(os.path.dirname(__file__), "../../frontend/dist"),
+    "/app/dist",
+]
+_static_dist = None
+for _c in _dist_candidates:
+    if os.path.exists(_c) and os.path.isdir(_c) and os.path.exists(os.path.join(_c, "index.html")):
+        _static_dist = _c
+        break
+
+if _static_dist:
+    _assets_path = os.path.join(_static_dist, "assets")
+    if os.path.exists(_assets_path):
+        app.mount("/assets", StaticFiles(directory=_assets_path), name="assets")
+
+    @app.get("/")
+    @app.head("/")
+    async def serve_index():
+        return FileResponse(os.path.join(_static_dist, "index.html"))
+
+    @app.get("/{full_path:path}")
+    @app.head("/{full_path:path}")
+    async def serve_frontend_spa(full_path: str):
+        # Do not catch API or WebSocket endpoints
+        if full_path.startswith("api/") or full_path.startswith("ws/") or full_path in [
+            "health",
+            "ping",
+            "chat",
+            "create_session",
+            "docs",
+            "openapi.json",
+        ]:
+            raise HTTPException(status_code=404, detail="Not Found")
+        target_file = os.path.join(_static_dist, full_path)
+        if os.path.exists(target_file) and os.path.isfile(target_file):
+            return FileResponse(target_file)
+        return FileResponse(os.path.join(_static_dist, "index.html"))
+else:
+    @app.get("/")
+    @app.head("/")
+    async def serve_root_fallback():
+        return await health()
 
 
 if __name__ == "__main__":

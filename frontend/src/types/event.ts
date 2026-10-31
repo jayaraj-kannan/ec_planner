@@ -28,6 +28,8 @@ export interface EventItem {
   theme?: string;
   dressCode?: string;
   specialInstructions?: string;
+  isRunSheetLaunched?: boolean;
+  runSheetHashCode?: string;
   createdAt: string;
 }
 

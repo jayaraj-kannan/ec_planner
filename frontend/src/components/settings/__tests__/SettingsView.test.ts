@@ -28,7 +28,7 @@ describe('SettingsView Component Unit Tests', () => {
     vi.stubGlobal('alert', vi.fn());
 
     const wrapper = mount(SettingsView);
-    const resetBtn = wrapper.findAll('button').find((b) => b.text().includes('Reset All Mock Data'));
+    const resetBtn = wrapper.findAll('button').find((b) => b.text().includes('Reset Workspace Data'));
     if (resetBtn) {
       await resetBtn.trigger('click');
       expect(window.confirm).toHaveBeenCalled();
@@ -43,7 +43,7 @@ describe('SettingsView Component Unit Tests', () => {
     vi.stubGlobal('alert', vi.fn());
 
     const wrapper = mount(SettingsView);
-    const resetBtn = wrapper.findAll('button').find((b) => b.text().includes('Reset All Mock Data'));
+    const resetBtn = wrapper.findAll('button').find((b) => b.text().includes('Reset Workspace Data'));
     if (resetBtn) {
       await resetBtn.trigger('click');
       expect(window.confirm).toHaveBeenCalled();

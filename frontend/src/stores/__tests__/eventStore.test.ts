@@ -18,6 +18,11 @@ import {
   actions,
   formatCurrency,
   calculateDaysUntil,
+  parseRunSheetRoute,
+  getPublicRunSheetUrl,
+  generateRunSheetHashCode,
+  publicRunSheetEvent,
+  publicRunSheetActivities,
 } from '../eventStore';
 
 describe('EventStore Comprehensive Unit Tests (100% Coverage)', () => {
@@ -317,6 +322,92 @@ describe('EventStore Comprehensive Unit Tests (100% Coverage)', () => {
         expect(state.tasks.some((t) => t.id === added.id)).toBe(false);
       }
     });
+
+    it('bulk adds tasks and prevents duplicates for the same event', () => {
+      const initialCount = state.tasks.length;
+      const tasksToAdd = [
+        {
+          eventId: state.activeEventId,
+          taskName: 'Unique Task A',
+          category: 'Planning',
+          assignedTo: 'Planner',
+          priority: 'high' as const,
+          dueDate: '2026-11-20',
+        },
+        {
+          eventId: state.activeEventId,
+          taskName: 'Unique Task B',
+          category: 'Catering',
+          assignedTo: 'Lead',
+          priority: 'medium' as const,
+          dueDate: '2026-11-22',
+        },
+      ];
+
+      const created = actions.addTasks(tasksToAdd);
+      expect(created.length).toBe(2);
+      expect(state.tasks.length).toBe(initialCount + 2);
+
+      // Attempt to add duplicate task
+      const duplicateAttempt = actions.addTasks([
+        {
+          eventId: state.activeEventId,
+          taskName: 'unique task a', // case insensitive match
+          category: 'Planning',
+          assignedTo: 'Planner',
+          priority: 'low' as const,
+          dueDate: '2026-11-25',
+        },
+      ]);
+      expect(duplicateAttempt.length).toBe(0);
+      expect(state.tasks.length).toBe(initialCount + 2);
+    });
+
+    it('applies milestone checklist phases into categorized event tasks', () => {
+      const eid = 'evt-test-apply-phases';
+      const phases = [
+        {
+          timeline: 'Early Phase (3+ months out)',
+          tasks: [{ title: 'Early Milestone Task 1', priority: 'Urgent' }],
+        },
+        {
+          timeline: 'Mid Phase (4-8 weeks out)',
+          tasks: [{ title: 'Mid Milestone Task 2', priority: 'Medium' }],
+        },
+        {
+          timeline: 'Countdown (1-2 weeks out)',
+          tasks: [{ title: 'Countdown Task 3', priority: 'High' }],
+        },
+        {
+          timeline: 'Day of Celebration',
+          tasks: [{ title: 'Day-of Execution Task 4', priority: 'Low' }],
+        },
+      ];
+
+      const applied = actions.applyMilestoneChecklist(
+        eid,
+        'Test Anniversary Gala',
+        '2026-12-15',
+        phases
+      );
+
+      expect(applied.length).toBe(4);
+      const early = state.tasks.find((t) => t.taskName === 'Early Milestone Task 1');
+      expect(early).toBeDefined();
+      expect(early?.category).toBe('Planning');
+      expect(early?.priority).toBe('high');
+      expect(early?.notes).toContain('Test Anniversary Gala');
+
+      const mid = state.tasks.find((t) => t.taskName === 'Mid Milestone Task 2');
+      expect(mid?.category).toBe('Vendor Management');
+
+      const countdown = state.tasks.find((t) => t.taskName === 'Countdown Task 3');
+      expect(countdown?.category).toBe('Final Preparations');
+
+      const dayOf = state.tasks.find((t) => t.taskName === 'Day-of Execution Task 4');
+      expect(dayOf?.category).toBe('Day-of Execution');
+      expect(dayOf?.priority).toBe('low');
+    });
   });
 
   describe('Expense & Vendor Operations', () => {
@@ -497,6 +588,97 @@ describe('EventStore Comprehensive Unit Tests (100% Coverage)', () => {
       expect(state.events).toEqual([]);
 
       await actions.syncAllToFirestore('user-1');
+    });
+  });
+
+  describe('Public Run Sheet URL & Sharing Actions', () => {
+    it('generates dynamic hash public runsheet URL with target eventId or defaults to active event', () => {
+      const urlWithId = getPublicRunSheetUrl('evt-1');
+      expect(urlWithId).toContain('#/runsheet/rs-priya-rahul-9a8f');
+
+      actions.setActiveEvent('evt-1');
+      const urlDefault = getPublicRunSheetUrl();
+      expect(urlDefault).toContain('#/runsheet/rs-priya-rahul-9a8f');
+
+      const urlCustom = getPublicRunSheetUrl('custom-id');
+      expect(urlCustom).toContain('#/runsheet/custom-id');
+    });
+
+    it('generates unique runsheet hash codes with or without event name', () => {
+      const codeWithName = generateRunSheetHashCode('evt-1', "Aarav's 1st Birthday");
+      expect(codeWithName).toMatch(/^rs-aarav-s-1st-[a-z0-9]+/);
+
+      const codeWithoutName = generateRunSheetHashCode('evt-2');
+      expect(codeWithoutName).toMatch(/^rs-[a-z0-9]+/);
+    });
+
+    it('launches and unpublishes live run sheet generating unique hash code', () => {
+      const hash = actions.launchRunSheet('evt-2');
+      expect(hash).toMatch(/^rs-/);
+      const evt = state.events.find((e) => e.id === 'evt-2');
+      expect(evt?.isRunSheetLaunched).toBe(true);
+      expect(evt?.runSheetHashCode).toBe(hash);
+
+      actions.unpublishRunSheet('evt-2');
+      expect(evt?.isRunSheetLaunched).toBe(false);
+
+      // Launch and unpublish non-existent event gracefully returns empty
+      expect(actions.launchRunSheet('non-existent')).toBe('');
+      actions.unpublishRunSheet('non-existent');
+    });
+
+    it('parses runsheet route from query parameter or hash', () => {
+      // Test when window has query
+      const originalLocation = window.location;
+      delete (window as any).location;
+      (window as any).location = new URL('https://example.com/app?runsheet=evt-custom');
+
+      expect(parseRunSheetRoute()).toBe('evt-custom');
+
+      // Test with runsheet_id param
+      (window as any).location = new URL('https://example.com/app?runsheet_id=evt-custom-2');
+      expect(parseRunSheetRoute()).toBe('evt-custom-2');
+
+      // Test with hash route #/runsheet/evt-hash
+      (window as any).location = new URL('https://example.com/app#/runsheet/evt-hash');
+      expect(parseRunSheetRoute()).toBe('evt-hash');
+
+      // Restore
+      (window as any).location = originalLocation;
+    });
+
+    it('opens and closes public run sheet and loads event context', async () => {
+      expect(state.publicRunSheetEventId).toBeNull();
+
+      await actions.openPublicRunSheet('evt-1');
+      expect(state.publicRunSheetEventId).toBe('evt-1');
+      expect(publicRunSheetEvent.value?.id).toBe('evt-1');
+      expect(publicRunSheetActivities.value.length).toBeGreaterThan(0);
+
+      actions.closePublicRunSheet();
+      expect(state.publicRunSheetEventId).toBeNull();
+    });
+
+    it('loads event for public runsheet by unique hash or id falling back to initial data if needed', async () => {
+      const loadedByHash = await actions.loadEventForPublicRunSheet('rs-priya-rahul-9a8f');
+      expect(loadedByHash).toBeDefined();
+      expect(loadedByHash?.id).toBe('evt-1');
+
+      const loadedById = await actions.loadEventForPublicRunSheet('evt-1');
+      expect(loadedById).toBeDefined();
+      expect(loadedById?.id).toBe('evt-1');
+      expect(state.activeEventId).toBe('evt-1');
+
+      const notFound = await actions.loadEventForPublicRunSheet('');
+      expect(notFound).toBeNull();
+    });
+
+    it('resets publicRunSheetEventId on resetToMockDefaults', async () => {
+      await actions.openPublicRunSheet('evt-1');
+      expect(state.publicRunSheetEventId).toBe('evt-1');
+
+      actions.resetToMockDefaults();
+      expect(state.publicRunSheetEventId).toBeNull();
     });
   });
 });

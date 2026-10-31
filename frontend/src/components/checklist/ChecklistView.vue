@@ -80,13 +80,24 @@ function handleAddTask() {
         </p>
       </div>
 
-      <button
-        class="btn btn-primary btn-sm"
-        @click="isAddTaskModalOpen = true"
-      >
-        <Plus :size="15" />
-        <span>+ Add Task</span>
-      </button>
+      <div style="display: flex; gap: 8px">
+        <button
+          class="btn btn-secondary btn-sm"
+          @click="actions.openAgentChatModal(`Generate a personalized milestone checklist for ${currentEvent?.name || 'my celebration'}`)"
+          title="Use PlanCraft AI Agent to generate tailored milestone tasks"
+        >
+          <Sparkles :size="15" style="color: var(--primary)" />
+          <span>Generate with AI</span>
+        </button>
+
+        <button
+          class="btn btn-primary btn-sm"
+          @click="isAddTaskModalOpen = true"
+        >
+          <Plus :size="15" />
+          <span>Add Task</span>
+        </button>
+      </div>
     </div>
 
     <!-- Progress Card -->
@@ -248,6 +259,14 @@ function handleAddTask() {
         <Sparkles :size="28" style="color: var(--primary); margin-bottom: 8px" />
         <div style="font-weight: 700; font-size: 1rem">No tasks in this view</div>
         <div style="font-size: 0.85rem">Try switching filters or add a new milestone task.</div>
+        <button
+          class="btn btn-primary btn-sm"
+          style="margin-top: 14px; margin-left: auto; margin-right: auto"
+          @click="actions.openAgentChatModal(`Generate a personalized milestone checklist for ${currentEvent?.name || 'my celebration'}`)"
+        >
+          <Sparkles :size="15" />
+          <span>Generate Checklist with AI</span>
+        </button>
       </div>
     </div>
 

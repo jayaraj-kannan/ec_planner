@@ -32,46 +32,36 @@ function closePreview() {
       <div>
         <h2 style="font-size: 1.6rem">Document Vault & Attachments</h2>
         <p style="font-size: 0.88rem; color: var(--text-muted)">
-          Section 6.9: Master venue contracts, floor plans, catering tasting blueprints, invoices, and invitation assets.
+          Section 6.9: Master venue contracts, floor plans, catering tasting blueprints, invoices, and invitation
+          assets.
         </p>
       </div>
 
-      <button
-        class="btn btn-primary"
-        @click="openPreview(eventDocuments[0])"
-      >
+      <button class="btn btn-primary" @click="openPreview(eventDocuments[0])">
         <FileUp :size="16" />
-        <span>+ Upload Document</span>
+        <span>Upload Document</span>
       </button>
     </div>
 
     <!-- Documents Grid -->
     <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 18px">
-      <div
-        v-for="doc in eventDocuments"
-        :key="doc.id"
-        class="card"
-        style="display: flex; flex-direction: column; justify-content: space-between"
-      >
+      <div v-for="doc in eventDocuments" :key="doc.id" class="card"
+        style="display: flex; flex-direction: column; justify-content: space-between">
         <div>
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px">
-            <span
-              class="badge"
-              :class="{
-                'badge-success': doc.category === 'Contract',
-                'badge-info': doc.category === 'Floorplan' || doc.category === 'Design',
-                'badge-warning': doc.category === 'Invoice',
-                'badge-neutral': doc.category === 'Invite',
-              }"
-            >
+            <span class="badge" :class="{
+              'badge-success': doc.category === 'Contract',
+              'badge-info': doc.category === 'Floorplan' || doc.category === 'Design',
+              'badge-warning': doc.category === 'Invoice',
+              'badge-neutral': doc.category === 'Invite',
+            }">
               {{ doc.category.toUpperCase() }}
             </span>
             <span style="font-size: 0.75rem; color: var(--text-muted)">{{ doc.fileSize }}</span>
           </div>
 
           <div style="display: flex; align-items: flex-start; gap: 12px">
-            <div
-              style="
+            <div style="
                 width: 40px;
                 height: 40px;
                 border-radius: var(--radius-md);
@@ -81,8 +71,7 @@ function closePreview() {
                 align-items: center;
                 justify-content: center;
                 flex-shrink: 0;
-              "
-            >
+              ">
               <FileText :size="20" />
             </div>
 
@@ -97,20 +86,14 @@ function closePreview() {
           </div>
         </div>
 
-        <div style="display: flex; gap: 8px; border-top: 1px solid var(--surface-border); padding-top: 14px; margin-top: 16px">
-          <button
-            class="btn btn-outline btn-sm"
-            style="flex: 1"
-            @click="openPreview(doc)"
-          >
+        <div
+          style="display: flex; gap: 8px; border-top: 1px solid var(--surface-border); padding-top: 14px; margin-top: 16px">
+          <button class="btn btn-outline btn-sm" style="flex: 1" @click="openPreview(doc)">
             <Eye :size="14" />
             <span>Preview</span>
           </button>
 
-          <button
-            class="btn btn-secondary btn-sm"
-            @click="openPreview(doc)"
-          >
+          <button class="btn btn-secondary btn-sm" @click="openPreview(doc)">
             <Download :size="14" />
             <span>Download</span>
           </button>
@@ -132,8 +115,7 @@ function closePreview() {
         </div>
 
         <div class="modal-body" style="text-align: center; padding: 36px 20px">
-          <div
-            style="
+          <div style="
               width: 70px;
               height: 70px;
               border-radius: 50%;
@@ -143,8 +125,7 @@ function closePreview() {
               align-items: center;
               justify-content: center;
               margin: 0 auto 16px;
-            "
-          >
+            ">
             <FileText :size="36" />
           </div>
 
@@ -155,8 +136,7 @@ function closePreview() {
             Category: {{ previewDoc.category }} • File Size: {{ previewDoc.fileSize }} • Signed & Verified
           </p>
 
-          <div
-            style="
+          <div style="
               background: var(--surface-subtle);
               border-radius: var(--radius-md);
               padding: 16px;
@@ -166,9 +146,8 @@ function closePreview() {
               color: var(--text-muted);
               border: 1px solid var(--surface-border);
               line-height: 1.6;
-            "
-          >
-            --- MOCK CLOUD STORAGE PREVIEW ---<br />
+            ">
+            --- CLOUD STORAGE DOCUMENT PREVIEW ---<br />
             EVENT ID: {{ currentEvent.id }}<br />
             DOCUMENT: {{ previewDoc.title }}<br />
             VERIFICATION: SHA-256 HMAC Verified<br />

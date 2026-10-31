@@ -15,7 +15,11 @@ import uuid
 from datetime import datetime
 from typing import Any, Optional
 
-DB_FILE = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "adk_sessions.db")
+_default_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+if os.access(_default_dir, os.W_OK):
+    DB_FILE = os.getenv("DB_FILE", os.path.join(_default_dir, "adk_sessions.db"))
+else:
+    DB_FILE = os.getenv("DB_FILE", "/tmp/adk_sessions.db")
 
 
 def get_db():
@@ -175,7 +179,12 @@ def create_event(
     try:
         from .event_tools import generate_checklist_tasks
         days_until = event_data.get("days_until", 90)
-        checklist_data = generate_checklist_tasks(event_type=event_type, days_until_event=days_until)
+        checklist_data = generate_checklist_tasks(
+            event_type=event_type,
+            days_until_event=days_until,
+            event_id=event_id,
+            event_name=name,
+        )
     except Exception as ce:
         checklist_data = {"event_type": event_type, "milestone_phases": []}
 

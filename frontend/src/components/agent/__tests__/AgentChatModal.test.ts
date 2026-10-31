@@ -582,4 +582,116 @@ describe('AgentChatModal Component Unit Tests (Comprehensive Coverage)', () => {
 
     expect(wrapper.text()).toContain('Val 1');
   });
+
+  it('synchronizes generated checklist tasks with the selected event context into store', async () => {
+    actions.setActiveEvent('evt-1');
+    const targetEvent = state.events.find((e) => e.id === 'evt-1')!;
+    const initialTasksCount = state.tasks.filter((t) => t.eventId === 'evt-1').length;
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockImplementation((url: string) => {
+        if (url.endsWith('/health')) {
+          return Promise.resolve({ ok: true, status: 200, json: async () => ({}) });
+        }
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          json: async () => ({
+            parts: [
+              { kind: 'text', text: 'Here is your personalized launch checklist.' },
+              {
+                kind: 'a2ui',
+                data: {
+                  type: 'generate_checklist_tasks',
+                  payload: {
+                    event_id: 'evt-1',
+                    event_name: targetEvent.name,
+                    event_type: 'wedding',
+                    days_remaining: 45,
+                    suggested_immediate_action: 'Finalize floral decor',
+                    milestone_phases: [
+                      {
+                        timeline: 'Early Phase (3+ months out)',
+                        tasks: [
+                          { title: 'New Tailored Venue Walkthrough', priority: 'High' },
+                        ],
+                      },
+                      {
+                        timeline: 'Mid Phase (4-8 weeks out)',
+                        tasks: [
+                          { title: 'Sample Catering Tasting Session', priority: 'Medium' },
+                        ],
+                      },
+                    ],
+                  },
+                },
+              },
+            ],
+          }),
+        });
+      })
+    );
+
+    const wrapper = mount(AgentChatModal);
+    const input = wrapper.find('.agent-input');
+    await input.setValue('Generate checklist for this event');
+    await wrapper.find('form.agent-input-form').trigger('submit');
+    await flushPromises();
+
+    // Verify task synchronization for evt-1
+    const eventTasks = state.tasks.filter((t) => t.eventId === 'evt-1');
+    expect(eventTasks.length).toBe(initialTasksCount + 2);
+    expect(eventTasks.some((t) => t.taskName === 'New Tailored Venue Walkthrough')).toBe(true);
+    expect(eventTasks.some((t) => t.taskName === 'Sample Catering Tasting Session')).toBe(true);
+
+    // Verify banner rendering
+    expect(wrapper.text()).toContain(targetEvent.name);
+    expect(wrapper.text()).toContain('45 days away');
+
+    // Test navigate to tasks tab button
+    const viewChecklistBtn = wrapper.find('.checklist-sync-header-banner button:nth-child(2)');
+    if (viewChecklistBtn.exists()) {
+      await viewChecklistBtn.trigger('click');
+      expect(state.activeTab).toBe('checklist');
+      expect(state.isAgentChatModalOpen).toBe(false);
+    }
+  });
+
+  it('allows clicking single add task button and re-sync in checklist card', async () => {
+    actions.setActiveEvent('evt-1');
+    const wrapper = mount(AgentChatModal);
+    const initialCount = state.tasks.length;
+
+    // Simulate an assistant message with checklist card
+    (wrapper.vm as any).messages.push({
+      id: 'msg-checklist-test',
+      role: 'assistant',
+      content: 'Milestone tasks generated.',
+      a2uiData: {
+        type: 'generate_checklist_tasks',
+        payload: {
+          event_id: 'evt-1',
+          event_name: 'Priya & Rahul Grand Wedding',
+          event_type: 'wedding',
+          days_remaining: 30,
+          milestone_phases: [
+            {
+              timeline: 'Countdown (1-2 weeks out)',
+              tasks: [{ title: 'Unique Manual Added Task XYZ', priority: 'High' }],
+            },
+          ],
+        },
+      },
+      timestamp: '12:00',
+    });
+
+    await wrapper.vm.$nextTick();
+
+    const addBtn = wrapper.find('.btn-add-task-chip');
+    if (addBtn.exists()) {
+      await addBtn.trigger('click');
+      expect(state.tasks.some((t) => t.taskName === 'Unique Manual Added Task XYZ')).toBe(true);
+    }
+  });
 });

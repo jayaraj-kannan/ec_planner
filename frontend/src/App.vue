@@ -1,8 +1,10 @@
 <script setup lang="ts">
+import { onMounted, onUnmounted } from 'vue';
 import {
   state,
   actions,
   taskMetrics,
+  parseRunSheetRoute,
 } from './stores/eventStore';
 import Sidebar from './components/layout/Sidebar.vue';
 import Navbar from './components/layout/Navbar.vue';
@@ -14,6 +16,7 @@ import BudgetView from './components/budget/BudgetView.vue';
 import GuestsView from './components/guests/GuestsView.vue';
 import VendorsView from './components/vendors/VendorsView.vue';
 import ScheduleView from './components/schedule/ScheduleView.vue';
+import PublicRunSheetView from './components/schedule/PublicRunSheetView.vue';
 import ArrangementsView from './components/arrangements/ArrangementsView.vue';
 import DocumentsView from './components/documents/DocumentsView.vue';
 import SettingsView from './components/settings/SettingsView.vue';
@@ -31,22 +34,62 @@ import {
   Sparkles,
   LogIn,
 } from 'lucide-vue-next';
+
+onMounted(async () => {
+  const routeEventId = parseRunSheetRoute();
+  if (routeEventId) {
+    await actions.openPublicRunSheet(routeEventId);
+  } else {
+    state.publicRunSheetEventId = null;
+  }
+  if (typeof window !== 'undefined') {
+    window.addEventListener('popstate', handlePopState);
+    window.addEventListener('hashchange', handlePopState);
+  }
+});
+
+onUnmounted(() => {
+  if (typeof window !== 'undefined') {
+    window.removeEventListener('popstate', handlePopState);
+    window.removeEventListener('hashchange', handlePopState);
+  }
+});
+
+function handlePopState() {
+  const routeEventId = parseRunSheetRoute();
+  if (routeEventId) {
+    actions.openPublicRunSheet(routeEventId);
+  } else if (state.publicRunSheetEventId) {
+    actions.closePublicRunSheet();
+  }
+}
 </script>
 
 <template>
   <div class="app-container">
     <!-- Desktop & Tablet Sidebar / Mobile Drawer (Visible when signed in) -->
-    <Sidebar v-if="authState.user" />
+    <Sidebar v-if="authState.user && !state.publicRunSheetEventId" />
 
     <!-- Main Content Wrapper -->
-    <div class="main-wrapper" :class="{ 'guest-main-wrapper': !authState.user }">
-      <!-- Top Sticky Navigation Bar -->
-      <Navbar />
+    <div
+      class="main-wrapper"
+      :class="{
+        'guest-main-wrapper': !authState.user || !!state.publicRunSheetEventId,
+      }"
+    >
+      <!-- Top Sticky Navigation Bar (Hidden when viewing dedicated full-screen public runsheet) -->
+      <Navbar v-if="!state.publicRunSheetEventId" />
 
       <!-- Active Content View Area -->
-      <main class="content-body">
+      <main class="content-body" :style="state.publicRunSheetEventId ? 'padding: 0' : ''">
+        <!-- Dedicated Public Event Run Sheet (Direct shareable link for all attendees without login) -->
+        <PublicRunSheetView
+          v-if="state.publicRunSheetEventId"
+          :event-id="state.publicRunSheetEventId"
+        />
+
         <!-- Unauthenticated Guest Showcase Dashboard -->
-        <HomeGuestDashboardView v-if="!authState.user" />
+        <HomeGuestDashboardView v-else-if="!authState.user" />
 
         <!-- Authenticated Operational Event Tabs -->
         <template v-else>
@@ -63,8 +106,8 @@ import {
         </template>
       </main>
 
-      <!-- Mobile Bottom Navigation Bar (Visible only on screens <= 768px) -->
-      <nav class="mobile-bottom-nav">
+      <!-- Mobile Bottom Navigation Bar (Visible only on screens <= 768px, hidden in public runsheet view) -->
+      <nav v-if="!state.publicRunSheetEventId" class="mobile-bottom-nav">
         <template v-if="!authState.user">
           <button
             class="bottom-nav-btn active"
