@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, type Component } from 'vue';
 import {
   state,
   actions,
@@ -29,7 +29,7 @@ import { authState, authActions } from '../../stores/authStore';
 interface NavItem {
   id: ActiveTab;
   label: string;
-  icon: any;
+  icon: Component;
   badge?: number;
   badgeType?: 'danger' | 'primary';
 }

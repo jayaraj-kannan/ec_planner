@@ -79,6 +79,10 @@ export function registerAuthSyncHooks(
   onUserLogoutCallback = onLogout;
 }
 
+interface FirebaseAuthError extends Error {
+  code?: string;
+}
+
 export const authActions = {
   openAuthModal(mode: 'signin' | 'signup' = 'signin') {
     authState.authMode = mode;
@@ -108,9 +112,10 @@ export const authActions = {
       }
       authState.isAuthModalOpen = false;
       return result.user;
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Google Sign-In Error:', err);
-      authState.error = err.message || 'Failed to sign in with Google. Please try again.';
+      const authErr = err as FirebaseAuthError;
+      authState.error = authErr.message || 'Failed to sign in with Google. Please try again.';
       throw err;
     } finally {
       authState.isLoading = false;
@@ -129,14 +134,15 @@ export const authActions = {
       }
       authState.isAuthModalOpen = false;
       return result.user;
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Email Sign-In Error:', err);
-      let msg = err.message || 'Invalid email or password.';
-      if (err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password') {
+      const authErr = err as FirebaseAuthError;
+      let msg = authErr.message || 'Invalid email or password.';
+      if (authErr.code === 'auth/invalid-credential' || authErr.code === 'auth/wrong-password') {
         msg = 'Invalid email or password. Please verify and try again.';
-      } else if (err.code === 'auth/user-not-found') {
+      } else if (authErr.code === 'auth/user-not-found') {
         msg = 'No account found with this email. Please sign up.';
-      } else if (err.code === 'auth/invalid-email') {
+      } else if (authErr.code === 'auth/invalid-email') {
         msg = 'Please enter a valid email address.';
       }
       authState.error = msg;
@@ -165,12 +171,13 @@ export const authActions = {
       }
       authState.isAuthModalOpen = false;
       return result.user;
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Email Sign-Up Error:', err);
-      let msg = err.message || 'Failed to create account.';
-      if (err.code === 'auth/email-already-in-use') {
+      const authErr = err as FirebaseAuthError;
+      let msg = authErr.message || 'Failed to create account.';
+      if (authErr.code === 'auth/email-already-in-use') {
         msg = 'This email is already registered. Please sign in instead.';
-      } else if (err.code === 'auth/weak-password') {
+      } else if (authErr.code === 'auth/weak-password') {
         msg = 'Password should be at least 6 characters.';
       }
       authState.error = msg;
@@ -189,7 +196,7 @@ export const authActions = {
       if (onUserLogoutCallback) {
         onUserLogoutCallback();
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Sign-out error:', err);
     } finally {
       authState.isLoading = false;

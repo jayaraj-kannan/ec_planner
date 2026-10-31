@@ -33,7 +33,7 @@ const props = defineProps<{
 const currentTime = ref('');
 const copied = ref(false);
 const isRefreshing = ref(false);
-let timer: any = null;
+let timer: ReturnType<typeof setInterval> | null = null;
 
 function updateTime() {
   const now = new Date();

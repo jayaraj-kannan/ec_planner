@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, nextTick, watch } from 'vue';
 import { state, actions, currentEvent, calculateDaysUntil } from '../../stores/eventStore';
+import type { EventItem } from '../../types/event';
 import {
   Sparkles,
   Send,
@@ -17,11 +18,16 @@ import {
   ExternalLink,
 } from 'lucide-vue-next';
 
+interface A2UIData {
+  type: string;
+  payload?: any;
+}
+
 interface ChatMessage {
   id: string;
   role: 'user' | 'assistant';
   content: string;
-  a2uiData?: any;
+  a2uiData?: A2UIData;
   timestamp: string;
 }
 
@@ -121,7 +127,7 @@ function selectIntoChat(promptText: string, autoFocus = true) {
 }
 
 function selectEventIntoChat(
-  eventItem: any,
+  eventItem: EventItem | { id: string; name: string },
   action: 'select' | 'details' | 'edit' | 'budget' | 'runsheet' | 'checklist' = 'select'
 ) {
   if (!eventItem) return;
@@ -142,7 +148,7 @@ function selectEventIntoChat(
   }
 }
 
-function getCardTitle(a2uiData: any): string {
+function getCardTitle(a2uiData?: A2UIData | null): string {
   if (!a2uiData) return '';
   const type = a2uiData.type;
   const p = a2uiData.payload || {};
@@ -174,7 +180,7 @@ function getCardTitle(a2uiData: any): string {
   }
 }
 
-function getCardDescription(a2uiData: any): string {
+function getCardDescription(a2uiData?: A2UIData | null): string {
   if (!a2uiData) return '';
   const type = a2uiData.type;
   const p = a2uiData.payload || {};

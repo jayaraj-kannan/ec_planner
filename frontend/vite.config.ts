@@ -6,6 +6,29 @@ import { defineConfig } from 'vitest/config'
 export default defineConfig({
   plugins: [vue()],
   envPrefix: ['VITE_', 'FIREBASE_'],
+  build: {
+    chunkSizeWarningLimit: 650,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('@firebase') || id.includes('firebase')) {
+              return 'vendor-firebase';
+            }
+            if (id.includes('vue')) {
+              return 'vendor-vue';
+            }
+            if (id.includes('lucide-vue-next')) {
+              return 'vendor-icons';
+            }
+            if (id.includes('canvas-confetti')) {
+              return 'vendor-confetti';
+            }
+          }
+        },
+      },
+    },
+  },
   test: {
     environment: 'happy-dom',
     globals: true,

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted, type Component } from 'vue';
 import { authActions } from '../../stores/authStore';
 import { actions } from '../../stores/eventStore';
 import {
@@ -134,7 +134,7 @@ const slides: CarouselSlide[] = [
 ];
 
 const currentSlide = ref(0);
-let autoAdvanceTimer: any = null;
+let autoAdvanceTimer: ReturnType<typeof setInterval> | null = null;
 const isHovered = ref(false);
 
 function nextSlide() {
@@ -186,7 +186,7 @@ onUnmounted(() => {
 // ----------------------------------------------------
 interface FeatureCard {
   id: string;
-  icon: any;
+  icon: Component;
   iconBg: string;
   iconColor: string;
   tag: string;

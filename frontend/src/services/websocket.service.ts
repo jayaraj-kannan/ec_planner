@@ -32,7 +32,7 @@ export function getRunSheetWebSocketUrl(roomId: string): string {
 class RunSheetWebSocketService {
   private socket: WebSocket | null = null;
   private callbacks: RunSheetWsCallbacks | null = null;
-  private reconnectTimer: any = null;
+  private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   private explicitClose = false;
 
   public isConnected = ref(false);

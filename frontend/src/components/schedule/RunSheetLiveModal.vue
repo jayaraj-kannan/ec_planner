@@ -77,7 +77,7 @@ function openPublicView() {
   }
 }
 
-let timer: any = null;
+let timer: ReturnType<typeof setInterval> | null = null;
 
 function updateTime() {
   const now = new Date();
