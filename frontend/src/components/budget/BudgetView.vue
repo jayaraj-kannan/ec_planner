@@ -63,7 +63,7 @@ const filteredExpenses = computed(() => {
 });
 
 function handleAddExpense() {
-  if (!newExpense.description.trim()) return;
+  if (!currentEvent.value || !newExpense.description.trim()) return;
 
   const totalAmountMinor = Math.round(Number(newExpense.amountMajor) * 100);
   const taxAmountMinor = Math.round(Number(newExpense.taxMajor) * 100);
@@ -71,13 +71,13 @@ function handleAddExpense() {
   const paidAmountMinor = newExpense.paymentStatus === 'paid' ? fullTotal : 0;
 
   actions.addExpense({
-    eventId: currentEvent.value.id,
+    eventId: currentEvent.value?.id || '',
     categoryId: newExpense.categoryId || (eventCategories.value[0]?.id ?? 'cat-1'),
     vendorName: newExpense.vendorName || 'Independent Vendor',
     description: newExpense.description,
     amountMinor: totalAmountMinor,
     taxAmountMinor,
-    currency: currentEvent.value.currency,
+    currency: currentEvent.value?.currency || 'USD',
     invoiceNumber: newExpense.invoiceNumber || `INV-${Math.floor(1000 + Math.random() * 9000)}`,
     paymentMethod: newExpense.paymentMethod,
     paymentStatus: newExpense.paymentStatus,
@@ -196,8 +196,8 @@ function handleAddExpense() {
           </div>
 
           <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-muted)">
-            <span>Spent: <strong>{{ formatCurrency(cat.spentMinor, currentEvent.currency) }}</strong></span>
-            <span>Cap: {{ formatCurrency(cat.allocatedAmountMinor, currentEvent.currency) }}</span>
+            <span>Spent: <strong>{{ formatCurrency(cat.spentMinor, currentEvent?.currency) }}</strong></span>
+            <span>Cap: {{ formatCurrency(cat.allocatedAmountMinor, currentEvent?.currency) }}</span>
           </div>
         </div>
       </div>

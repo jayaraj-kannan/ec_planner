@@ -14,7 +14,7 @@ import {
 
 function handleReset() {
   if (confirm('Reset workspace back to initial celebration template data?')) {
-    actions.resetToMockDefaults();
+    actions.resetToTemplateDefaults();
     alert('Workspace template data successfully reloaded!');
   }
 }
@@ -92,8 +92,8 @@ function handleClearData() {
           <label class="form-label">Active Event Currency</label>
           <select
             class="form-select"
-            :value="currentEvent.currency"
-            @change="(e) => currentEvent.currency = (e.target as HTMLSelectElement).value"
+            :value="currentEvent?.currency || 'INR'"
+            @change="(e) => { if (currentEvent) currentEvent.currency = (e.target as HTMLSelectElement).value }"
           >
             <option value="INR">INR (₹ - Indian Rupee / Lakhs format)</option>
             <option value="USD">USD ($ - US Dollar)</option>

@@ -51,7 +51,7 @@ const filteredTasks = computed(() => {
 });
 
 function handleAddTask() {
-  if (!newTask.taskName.trim()) return;
+  if (!currentEvent.value || !newTask.taskName.trim()) return;
 
   actions.addTask({
     eventId: currentEvent.value.id,

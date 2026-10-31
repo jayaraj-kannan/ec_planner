@@ -55,7 +55,7 @@ def init_events_table():
     """)
     conn.commit()
 
-    # Seed initial mock events if table is empty
+    # Seed initial celebration template events if table is empty
     c.execute("SELECT COUNT(*) FROM events")
     count = c.fetchone()[0]
     if count == 0:

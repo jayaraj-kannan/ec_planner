@@ -62,7 +62,7 @@ const filteredGuests = computed(() => {
 });
 
 function handleAddGuest() {
-  if (!newGuest.guestName.trim()) return;
+  if (!currentEvent.value || !newGuest.guestName.trim()) return;
 
   actions.addGuest({
     eventId: currentEvent.value.id,
@@ -108,7 +108,8 @@ function exportCSV() {
   const encodedUri = encodeURI(csvContent);
   const link = document.createElement('a');
   link.setAttribute('href', encodedUri);
-  link.setAttribute('download', `${currentEvent.value.name.replace(/\s+/g, '_')}_Guest_List.csv`);
+  const evtName = currentEvent.value?.name || 'Celebration';
+  link.setAttribute('download', `${evtName.replace(/\s+/g, '_')}_Guest_List.csv`);
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);

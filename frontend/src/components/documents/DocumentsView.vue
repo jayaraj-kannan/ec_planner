@@ -148,7 +148,7 @@ function closePreview() {
               line-height: 1.6;
             ">
             --- CLOUD STORAGE DOCUMENT PREVIEW ---<br />
-            EVENT ID: {{ currentEvent.id }}<br />
+            EVENT ID: {{ currentEvent?.id || '' }}<br />
             DOCUMENT: {{ previewDoc.title }}<br />
             VERIFICATION: SHA-256 HMAC Verified<br />
             STORAGE PATH: gs://ec-planner-artifacts/documents/{{ previewDoc.id }}.pdf<br />

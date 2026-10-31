@@ -302,7 +302,7 @@ const featureCards: FeatureCard[] = [
     tag: 'Cloud & Offline',
     title: 'Firebase Auth & Firestore Sync',
     description: 'Sign in effortlessly with Google or Email/Password. Your celebration documents synchronize hierarchically in Firestore with resilient offline caching.',
-    bullets: ['One-click Google Sign-In', 'Hierarchical Firestore subcollections', 'Seamless offline demo fallback'],
+    bullets: ['One-click Google Sign-In', 'Hierarchical Firestore subcollections', 'Resilient offline data persistence'],
     ctaText: 'Sign In / Register',
     action: () => authActions.openAuthModal('signup'),
   },
@@ -344,7 +344,7 @@ const featureCards: FeatureCard[] = [
           @click="actions.openAgentChatModal()"
         >
           <Sparkles :size="16" style="color: var(--primary)" />
-          <span>Try AI Copilot Demo</span>
+          <span>Launch AI Copilot</span>
         </button>
       </div>
 

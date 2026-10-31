@@ -5,7 +5,7 @@ import {
   actions,
   getPublicRunSheetUrl,
 } from '../../stores/eventStore';
-import { INITIAL_EVENTS } from '../../mockData/initialData';
+import { INITIAL_EVENTS } from '../../data/initialData';
 import { authState } from '../../stores/authStore';
 import {
   Clock,

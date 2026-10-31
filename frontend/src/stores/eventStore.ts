@@ -24,7 +24,7 @@ import {
   INITIAL_ARRANGEMENTS,
   INITIAL_DOCUMENTS,
   INITIAL_NOTIFICATIONS,
-} from '../mockData/initialData';
+} from '../data/initialData';
 import {
   saveEventDoc,
   deleteEventDoc,
@@ -1059,8 +1059,8 @@ export const actions = {
     persistState();
   },
 
-  // Reset to original mock data
-  resetToMockDefaults() {
+  // Reset to celebration template defaults
+  resetToTemplateDefaults() {
     if (typeof localStorage !== 'undefined' && typeof localStorage.removeItem === 'function') {
       localStorage.removeItem(STORAGE_KEY);
     }
@@ -1079,6 +1079,10 @@ export const actions = {
     state.activeTab = 'dashboard';
     state.agentPendingQuery = '';
     persistState();
+  },
+
+  resetToMockDefaults() {
+    this.resetToTemplateDefaults();
   },
 };
 

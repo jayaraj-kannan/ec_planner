@@ -30,10 +30,11 @@ const copiedPublic = ref(false);
 const isRunSheetLaunched = computed(() => !!currentEvent.value?.isRunSheetLaunched);
 
 const publicRunSheetUrl = computed(() => {
-  return getPublicRunSheetUrl(currentEvent.value.id);
+  return currentEvent.value ? getPublicRunSheetUrl(currentEvent.value.id) : '';
 });
 
 function toggleLaunch() {
+  if (!currentEvent.value) return;
   if (isRunSheetLaunched.value) {
     actions.unpublishRunSheet(currentEvent.value.id);
   } else {
@@ -61,12 +62,14 @@ async function copyPublicLink() {
 }
 
 function openPublicView() {
-  actions.openPublicRunSheet(currentEvent.value.id);
+  if (currentEvent.value) {
+    actions.openPublicRunSheet(currentEvent.value.id);
+  }
 }
 
 const newActivity = reactive({
   activityName: '',
-  scheduleDate: currentEvent.value.startDate,
+  scheduleDate: currentEvent.value?.startDate || '',
   startTime: '10:00',
   endTime: '11:30',
   location: 'Main Ballroom',
@@ -78,7 +81,7 @@ const newActivity = reactive({
 });
 
 function handleAddActivity() {
-  if (!newActivity.activityName.trim()) return;
+  if (!currentEvent.value || !newActivity.activityName.trim()) return;
 
   actions.addScheduleActivity({
     eventId: currentEvent.value.id,
@@ -241,7 +244,7 @@ function markCompleted(actId: string) {
       <div class="card-header">
         <div class="card-title">
           <Clock :size="18" style="color: var(--primary)" />
-          <span>Ceremonies & Program Sequence ({{ currentEvent.startDate }})</span>
+          <span>Ceremonies & Program Sequence ({{ currentEvent?.startDate || '' }})</span>
         </div>
       </div>
 

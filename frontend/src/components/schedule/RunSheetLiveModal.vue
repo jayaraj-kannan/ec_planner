@@ -28,10 +28,11 @@ const copied = ref(false);
 const isRunSheetLaunched = computed(() => !!currentEvent.value?.isRunSheetLaunched);
 
 const publicRunSheetUrl = computed(() => {
-  return getPublicRunSheetUrl(currentEvent.value.id);
+  return currentEvent.value ? getPublicRunSheetUrl(currentEvent.value.id) : '';
 });
 
 function toggleLaunch() {
+  if (!currentEvent.value) return;
   if (isRunSheetLaunched.value) {
     actions.unpublishRunSheet(currentEvent.value.id);
   } else {
@@ -54,6 +55,7 @@ async function copyShareUrl() {
 }
 
 async function shareRunSheet() {
+  if (!currentEvent.value) return;
   if (typeof navigator !== 'undefined' && navigator.share) {
     try {
       await navigator.share({
@@ -70,7 +72,9 @@ async function shareRunSheet() {
 }
 
 function openPublicView() {
-  actions.openPublicRunSheet(currentEvent.value.id);
+  if (currentEvent.value) {
+    actions.openPublicRunSheet(currentEvent.value.id);
+  }
 }
 
 let timer: any = null;
@@ -146,7 +150,7 @@ function handleDone(actId: string) {
               LIVE COORDINATOR RUN SHEET
             </div>
             <div style="font-weight: 700; font-size: 1.05rem; color: white">
-              {{ currentEvent.name }}
+              {{ currentEvent?.name }}
             </div>
           </div>
         </div>
@@ -192,7 +196,7 @@ function handleDone(actId: string) {
             </span>
           </div>
           <div style="font-size: 0.72rem; color: #94A3B8">
-            {{ currentEvent.startDate }}
+            {{ currentEvent?.startDate }}
           </div>
         </div>
       </div>

@@ -31,7 +31,7 @@ const newVendor = reactive({
 });
 
 function handleAddVendor() {
-  if (!newVendor.name.trim()) return;
+  if (!currentEvent.value || !newVendor.name.trim()) return;
 
   actions.addVendor({
     eventId: currentEvent.value.id,
@@ -114,14 +114,14 @@ function handleAddVendor() {
             <div>
               <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase">Agreed Contract</div>
               <div style="font-weight: 700; font-size: 0.95rem; color: var(--text-main)">
-                {{ formatCurrency(v.agreedPriceMinor, currentEvent.currency) }}
+                {{ formatCurrency(v.agreedPriceMinor, currentEvent?.currency) }}
               </div>
             </div>
 
             <div>
               <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase">Advance Paid</div>
               <div style="font-weight: 700; font-size: 0.95rem; color: var(--success)">
-                {{ formatCurrency(v.advancePaidMinor, currentEvent.currency) }}
+                {{ formatCurrency(v.advancePaidMinor, currentEvent?.currency) }}
               </div>
             </div>
 
@@ -129,7 +129,7 @@ function handleAddVendor() {
               style="grid-column: span 2; border-top: 1px solid var(--surface-border); padding-top: 6px; display: flex; justify-content: space-between; font-size: 0.75rem">
               <span style="color: var(--text-muted)">Outstanding Balance:</span>
               <span style="font-weight: 800; color: var(--warning)">
-                {{ formatCurrency(Math.max(0, v.agreedPriceMinor - v.advancePaidMinor), currentEvent.currency) }}
+                {{ formatCurrency(Math.max(0, v.agreedPriceMinor - v.advancePaidMinor), currentEvent?.currency) }}
               </span>
             </div>
           </div>
