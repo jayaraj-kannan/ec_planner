@@ -2,22 +2,30 @@
   --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-display: 'Outfit', sans-serif;
 
-  /* Color Palette - README Section 5 */
-  --bg-main: #F8FAFC;
+  /* Color Palette - https://colorhunt.co/palette/ff6082ffe4f6b26cff705eff */
+  --palette-coral: #FF6082;
+  --palette-blush: #FFE4F6;
+  --palette-purple: #B26CFF;
+  --palette-indigo: #705EFF;
+
+  --bg-main: #FCFAFD;
   --surface-card: #FFFFFF;
-  --surface-subtle: #F1F5F9;
-  --surface-border: #E2E8F0;
-  --surface-border-strong: #CBD5E1;
+  --surface-subtle: #F9F4FC;
+  --surface-border: #F1E5F5;
+  --surface-border-strong: #E2CFE9;
 
-  --primary: #0F766E;        /* Deep rich teal */
-  --primary-hover: #115E59;
-  --primary-light: #F0FDFA;
-  --primary-focus: rgba(15, 118, 110, 0.2);
-  --primary-gradient: linear-gradient(135deg, #0F766E 0%, #14B8A6 100%);
+  --primary: #FF6082;        /* Vibrant Coral Pink: #FF6082 */
+  --primary-hover: #E84D70;
+  --primary-dark: #C92F52;
+  --primary-light: #FFF0F8;
+  --primary-focus: rgba(255, 96, 130, 0.25);
+  --primary-gradient: linear-gradient(135deg, #FF6082 0%, #B26CFF 100%);
+  --brand-gradient: linear-gradient(135deg, #FF6082 0%, #B26CFF 50%, #705EFF 100%);
+  --secondary-gradient: linear-gradient(135deg, #B26CFF 0%, #705EFF 100%);
 
-  --text-main: #0F172A;
-  --text-muted: #64748B;
-  --text-light: #94A3B8;
+  --text-main: #180D2B;
+  --text-muted: #6C5D80;
+  --text-light: #9C8EAE;
 
   --success: #10B981;
   --success-bg: #ECFDF5;
@@ -28,16 +36,16 @@
   --danger: #EF4444;
   --danger-bg: #FEF2F2;
   --danger-border: #FECACA;
-  --info: #0284C7;
-  --info-bg: #F0F9FF;
-  --info-border: #BAE6FD;
-  --purple: #8B5CF6;
-  --purple-bg: #F5F3FF;
+  --info: #705EFF;
+  --info-bg: #FFE4F6;
+  --info-border: #E8C1F0;
+  --purple: #B26CFF;
+  --purple-bg: #F8F0FF;
 
-  --shadow-sm: 0 1px 2px 0 rgba(15, 23, 42, 0.04);
-  --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.06), 0 2px 4px -2px rgba(15, 23, 42, 0.04);
-  --shadow-lg: 0 10px 15px -3px rgba(15, 23, 42, 0.07), 0 4px 6px -4px rgba(15, 23, 42, 0.03);
-  --shadow-xl: 0 20px 25px -5px rgba(15, 23, 42, 0.1), 0 8px 10px -6px rgba(15, 23, 42, 0.04);
+  --shadow-sm: 0 1px 2px 0 rgba(24, 13, 43, 0.04);
+  --shadow-md: 0 4px 6px -1px rgba(24, 13, 43, 0.06), 0 2px 4px -2px rgba(24, 13, 43, 0.04);
+  --shadow-lg: 0 10px 15px -3px rgba(24, 13, 43, 0.07), 0 4px 6px -4px rgba(24, 13, 43, 0.03);
+  --shadow-xl: 0 20px 25px -5px rgba(24, 13, 43, 0.1), 0 8px 10px -6px rgba(24, 13, 43, 0.04);
 
   --radius-sm: 6px;
   --radius-md: 9px;
@@ -126,7 +134,7 @@ input, select, textarea {
   align-items: center;
   justify-content: center;
   color: white;
-  box-shadow: 0 3px 8px rgba(15, 118, 110, 0.25);
+  box-shadow: 0 3px 10px rgba(255, 96, 130, 0.35);
   flex-shrink: 0;
 }
 
@@ -236,7 +244,7 @@ input, select, textarea {
   width: 30px;
   height: 30px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #0284C7, #0F766E);
+  background: linear-gradient(135deg, #FF6082, #705EFF);
   color: white;
   display: flex;
   align-items: center;
@@ -373,11 +381,12 @@ input, select, textarea {
 .btn-primary {
   background: var(--primary-gradient);
   color: white;
-  box-shadow: 0 2px 4px rgba(15, 118, 110, 0.2);
+  text-shadow: 0 1px 2px rgba(90, 10, 50, 0.25);
+  box-shadow: 0 2px 6px rgba(255, 96, 130, 0.35);
 }
 
 .btn-primary:hover {
-  box-shadow: 0 4px 10px rgba(15, 118, 110, 0.35);
+  box-shadow: 0 4px 12px rgba(255, 96, 130, 0.5);
   transform: translateY(-1px);
 }
 

@@ -51,7 +51,7 @@ function handleClearData() {
             width: 56px;
             height: 56px;
             border-radius: 50%;
-            background: linear-gradient(135deg, #0284C7, #0F766E);
+            background: linear-gradient(135deg, #FF6082, #705EFF);
             color: white;
             font-size: 1.3rem;
             font-weight: 800;

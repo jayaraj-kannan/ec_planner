@@ -433,9 +433,10 @@ function onToggleTask(taskId: string) {
 
 /* Hero Banner */
 .hero-banner {
-  background: linear-gradient(135deg, #0F766E 0%, #115E59 60%, #042F2E 100%);
+  background: linear-gradient(135deg, #1C0F2B 0%, #2A123D 50%, #151136 100%);
   color: white;
-  border: none;
+  border: 1px solid rgba(178, 108, 255, 0.35);
+  box-shadow: 0 4px 20px rgba(112, 94, 255, 0.15);
   padding: 16px 20px;
   display: flex;
   justify-content: space-between;
@@ -458,7 +459,9 @@ function onToggleTask(taskId: string) {
 }
 
 .hero-tag {
-  background: rgba(255, 255, 255, 0.2);
+  background: #FFE4F6;
+  color: #705EFF;
+  border: 1px solid #E8C1F0;
   padding: 2px 8px;
   border-radius: var(--radius-full);
   font-size: 0.68rem;
@@ -502,11 +505,11 @@ function onToggleTask(taskId: string) {
 
 /* Hero Countdown */
 .hero-readiness-card {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 228, 246, 0.12);
   backdrop-filter: blur(8px);
   padding: 10px 14px;
   border-radius: var(--radius-md);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(178, 108, 255, 0.35);
   display: flex;
   align-items: center;
   gap: 14px;

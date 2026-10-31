@@ -414,7 +414,7 @@ function returnToPlanner() {
       <section class="timeline-compact-section">
         <div class="timeline-compact-header">
           <h3 class="timeline-title">
-            <Clock :size="16" style="color: #38BDF8" />
+            <Clock :size="16" style="color: #B26CFF" />
             <span>Ceremony Sequence Timeline</span>
           </h3>
           <div class="timeline-pills-row">
@@ -426,7 +426,7 @@ function returnToPlanner() {
 
         <!-- Empty State -->
         <div v-if="activities.length === 0" class="empty-state-compact">
-          <Clock :size="28" style="color: #64748B; margin-bottom: 6px" />
+          <Clock :size="28" style="color: #B26CFF; margin-bottom: 6px" />
           <p>No ceremonies scheduled yet for this event.</p>
         </div>
 
@@ -460,9 +460,9 @@ function returnToPlanner() {
               <svg class="curve-svg" viewBox="0 0 100 36" fill="none" preserveAspectRatio="none">
                 <defs>
                   <linearGradient id="curveNextGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stop-color="#10B981" />
-                    <stop offset="60%" stop-color="#38BDF8" />
-                    <stop offset="100%" stop-color="#818CF8" />
+                    <stop offset="0%" stop-color="#705EFF" />
+                    <stop offset="50%" stop-color="#B26CFF" />
+                    <stop offset="100%" stop-color="#FF6082" />
                   </linearGradient>
                 </defs>
                 <!-- Curved bezier line branching from spine to card -->
@@ -473,7 +473,7 @@ function returnToPlanner() {
                   stroke-linecap="round"
                   stroke-dasharray="4 3"
                 />
-                <circle cx="94" cy="28" r="3.5" fill="#38BDF8" class="curve-beacon-dot" />
+                <circle cx="94" cy="28" r="3.5" fill="#FF6082" class="curve-beacon-dot" />
               </svg>
 
               <div class="next-floating-tag">
@@ -578,7 +578,7 @@ function returnToPlanner() {
 <style scoped>
 .public-runsheet-wrapper {
   min-height: 100vh;
-  background-color: #0B1120;
+  background-color: #0F081D;
   color: #F8FAFC;
   font-family: inherit;
   padding-bottom: 40px;
@@ -586,9 +586,9 @@ function returnToPlanner() {
 
 /* Organizer Top Bar (Exclusive to event owner / logged-in coordinator) */
 .organizer-top-banner {
-  background: linear-gradient(135deg, #1E1B4B 0%, #312E81 100%);
-  border-bottom: 1px solid #4338CA;
-  color: #E0E7FF;
+  background: linear-gradient(135deg, #1C0F2B 0%, #2A123D 100%);
+  border-bottom: 1px solid rgba(178, 108, 255, 0.35);
+  color: #FFE4F6;
   padding: 8px 16px;
   display: flex;
   align-items: center;
@@ -617,19 +617,20 @@ function returnToPlanner() {
 }
 
 .btn-launch-now {
-  background: #10B981;
+  background: linear-gradient(135deg, #FF6082 0%, #B26CFF 100%);
   color: white;
   border: none;
-  font-weight: 600;
+  font-weight: 700;
   border-radius: 6px;
   padding: 5px 12px;
   font-size: 0.78rem;
   cursor: pointer;
+  box-shadow: 0 2px 6px rgba(255, 96, 130, 0.35);
   transition: all 0.2s;
 }
 
 .btn-launch-now:hover {
-  background: #059669;
+  background: linear-gradient(135deg, #E84D70 0%, #9F54EE 100%);
 }
 
 .btn-exit-planner {
@@ -665,8 +666,8 @@ function returnToPlanner() {
 .unlaunched-guest-card {
   max-width: 520px;
   margin: 60px auto 40px;
-  background: #0F172A;
-  border: 1px solid #334155;
+  background: #180D2B;
+  border: 1px solid rgba(178, 108, 255, 0.3);
   border-radius: 16px;
   padding: 36px 24px;
   text-align: center;
@@ -681,12 +682,12 @@ function returnToPlanner() {
   width: 72px;
   height: 72px;
   border-radius: 50%;
-  background: rgba(245, 158, 11, 0.12);
-  border: 2px solid rgba(245, 158, 11, 0.3);
+  background: rgba(255, 96, 130, 0.12);
+  border: 2px solid rgba(255, 96, 130, 0.3);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #F59E0B;
+  color: #FF6082;
 }
 
 .standby-pulse {
@@ -702,14 +703,14 @@ function returnToPlanner() {
 
 .standby-message {
   font-size: 0.92rem;
-  color: #94A3B8;
+  color: #9C8EAE;
   line-height: 1.5;
   margin: 0;
 }
 
 .standby-details {
-  background: #1E293B;
-  border: 1px solid #334155;
+  background: #1C0F2B;
+  border: 1px solid rgba(178, 108, 255, 0.25);
   border-radius: 10px;
   padding: 12px 18px;
   width: 100%;
@@ -717,7 +718,7 @@ function returnToPlanner() {
   flex-direction: column;
   gap: 8px;
   font-size: 0.85rem;
-  color: #CBD5E1;
+  color: #E2CFE9;
   text-align: left;
 }
 
@@ -729,19 +730,19 @@ function returnToPlanner() {
 
 .standby-hint {
   font-size: 0.8rem;
-  color: #64748B;
+  color: #6C5D80;
   margin: 0;
 }
 
 .unlaunched-pill {
-  background: rgba(245, 158, 11, 0.15) !important;
-  color: #FBBF24 !important;
-  border-color: rgba(245, 158, 11, 0.35) !important;
+  background: rgba(255, 96, 130, 0.15) !important;
+  color: #FF6082 !important;
+  border-color: rgba(255, 96, 130, 0.35) !important;
 }
 
 .amber-dot {
-  background: #F59E0B !important;
-  box-shadow: 0 0 6px #F59E0B !important;
+  background: #FF6082 !important;
+  box-shadow: 0 0 6px #FF6082 !important;
 }
 
 /* Compact Sticky Top Bar (No Exit / Back button) */
@@ -749,9 +750,9 @@ function returnToPlanner() {
   position: sticky;
   top: 0;
   z-index: 50;
-  background: rgba(15, 23, 42, 0.94);
+  background: rgba(28, 15, 43, 0.95);
   backdrop-filter: blur(10px);
-  border-bottom: 1px solid #1E293B;
+  border-bottom: 1px solid rgba(178, 108, 255, 0.25);
   padding: 8px 16px;
   display: flex;
   align-items: center;
@@ -792,9 +793,9 @@ function returnToPlanner() {
   display: flex;
   align-items: center;
   gap: 4px;
-  background: #1E293B;
-  color: #38BDF8;
-  border: 1px solid #334155;
+  background: #1C0F2B;
+  color: #FFE4F6;
+  border: 1px solid rgba(178, 108, 255, 0.3);
   padding: 2px 7px;
   border-radius: 6px;
   font-family: monospace;
@@ -803,16 +804,16 @@ function returnToPlanner() {
 }
 
 .hash-icon {
-  color: #38BDF8;
+  color: #B26CFF;
 }
 
 .ws-badge {
   display: flex;
   align-items: center;
   gap: 4px;
-  background: rgba(14, 165, 233, 0.12);
-  color: #38BDF8;
-  border: 1px solid rgba(14, 165, 233, 0.3);
+  background: rgba(178, 108, 255, 0.15);
+  color: #FFE4F6;
+  border: 1px solid rgba(178, 108, 255, 0.35);
   padding: 2px 7px;
   border-radius: 6px;
   font-size: 0.68rem;
@@ -841,18 +842,18 @@ function returnToPlanner() {
   display: flex;
   align-items: center;
   gap: 5px;
-  background: #020617;
-  border: 1px solid #334155;
+  background: #140A22;
+  border: 1px solid rgba(178, 108, 255, 0.3);
   padding: 3px 8px;
   border-radius: 6px;
   font-family: monospace;
   font-size: 0.78rem;
   font-weight: 700;
-  color: #38BDF8;
+  color: #FFE4F6;
 }
 
 .clock-icon {
-  color: #94A3B8;
+  color: #B26CFF;
 }
 
 .compact-btn {
@@ -862,7 +863,7 @@ function returnToPlanner() {
 }
 
 .share-btn {
-  background: linear-gradient(135deg, #0284C7 0%, #0F766E 100%);
+  background: linear-gradient(135deg, #FF6082 0%, #B26CFF 100%);
   border: none;
 }
 
@@ -878,8 +879,8 @@ function returnToPlanner() {
 
 /* Compact Hero Card */
 .event-hero-compact {
-  background: linear-gradient(135deg, #1E293B 0%, #0F172A 100%);
-  border: 1px solid #334155;
+  background: linear-gradient(135deg, #1C0F2B 0%, #251338 50%, #151136 100%);
+  border: 1px solid rgba(178, 108, 255, 0.3);
   border-radius: 12px;
   padding: 14px 16px;
   display: flex;
@@ -901,7 +902,7 @@ function returnToPlanner() {
   gap: 4px;
   font-size: 0.68rem;
   font-weight: 800;
-  color: #38BDF8;
+  color: #FF6082;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   margin-bottom: 2px;
@@ -926,36 +927,36 @@ function returnToPlanner() {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  background: #0B1120;
-  border: 1px solid #334155;
+  background: #140A22;
+  border: 1px solid rgba(178, 108, 255, 0.25);
   border-radius: 6px;
   padding: 3px 8px;
   font-size: 0.74rem;
-  color: #E2E8F0;
+  color: #E2CFE9;
 }
 
 .hash-tag {
-  color: #38BDF8;
+  color: #B26CFF;
   font-family: monospace;
 }
 
 .tag-icon {
-  color: #38BDF8;
+  color: #FF6082;
 }
 
 .compact-share-bar {
   display: flex;
   align-items: center;
   gap: 6px;
-  background: #0B1120;
-  border: 1px solid #334155;
+  background: #140A22;
+  border: 1px solid rgba(178, 108, 255, 0.25);
   border-radius: 6px;
   padding: 4px 8px;
 }
 
 .share-prefix {
   font-size: 0.7rem;
-  color: #94A3B8;
+  color: #9C8EAE;
   font-weight: 600;
   white-space: nowrap;
 }
@@ -965,17 +966,19 @@ function returnToPlanner() {
   background: transparent;
   border: none;
   outline: none;
-  color: #38BDF8;
+  color: #FFE4F6;
   font-family: monospace;
   font-size: 0.74rem;
 }
 
 .copy-btn-compact {
-  background: #1E293B;
-  color: #E2E8F0;
-  border: 1px solid #475569;
+  background: #FF6082;
+  color: #FFFFFF;
+  border: none;
+  font-weight: 700;
   font-size: 0.7rem;
-  padding: 2px 7px;
+  padding: 3px 9px;
+  border-radius: 4px;
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -983,11 +986,11 @@ function returnToPlanner() {
 
 /* Spotlight Compact */
 .spotlight-compact {
-  background: linear-gradient(135deg, #1E1B4B 0%, #0F172A 100%);
-  border: 1px solid #4338CA;
+  background: linear-gradient(135deg, #25123A 0%, #180D2B 100%);
+  border: 1px solid rgba(255, 96, 130, 0.4);
+  box-shadow: 0 4px 18px rgba(255, 96, 130, 0.2);
   border-radius: 12px;
   padding: 12px 14px;
-  box-shadow: 0 4px 12px rgba(67, 56, 202, 0.15);
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -1005,14 +1008,14 @@ function returnToPlanner() {
   align-items: center;
   gap: 6px;
   font-weight: 800;
-  color: #A5B4FC;
+  color: #FF6082;
   letter-spacing: 0.05em;
 }
 
 .beacon-dot {
   width: 7px;
   height: 7px;
-  background-color: #6366F1;
+  background-color: #FF6082;
   border-radius: 50%;
   animation: pulse-ring 1.5s infinite;
 }
@@ -1020,7 +1023,7 @@ function returnToPlanner() {
 .spotlight-timing {
   font-family: monospace;
   font-weight: 800;
-  color: #E0E7FF;
+  color: #FFE4F6;
 }
 
 .spotlight-row {
@@ -1043,11 +1046,11 @@ function returnToPlanner() {
   flex-wrap: wrap;
   gap: 10px;
   font-size: 0.78rem;
-  color: #C7D2FE;
+  color: #E2CFE9;
 }
 
 .spotlight-phone {
-  color: #38BDF8;
+  color: #B26CFF;
   text-decoration: none;
   font-weight: 600;
 }
@@ -1072,20 +1075,20 @@ function returnToPlanner() {
   display: flex;
   justify-content: space-between;
   font-size: 0.7rem;
-  color: #94A3B8;
+  color: #9C8EAE;
   margin-bottom: 4px;
 }
 
 .progress-track-compact {
   height: 4px;
-  background: #334155;
+  background: #25173B;
   border-radius: 9999px;
   overflow: hidden;
 }
 
 .progress-fill-compact {
   height: 100%;
-  background: linear-gradient(90deg, #38BDF8 0%, #10B981 100%);
+  background: linear-gradient(90deg, #FF6082 0%, #B26CFF 50%, #705EFF 100%);
   border-radius: 9999px;
   transition: width 0.3s ease;
 }
@@ -1137,8 +1140,8 @@ function returnToPlanner() {
 }
 
 .pill-pending {
-  background: rgba(148, 163, 184, 0.15);
-  color: #94A3B8;
+  background: rgba(178, 108, 255, 0.15);
+  color: #FFE4F6;
 }
 
 /* Continuous Timeline List with Spine */
@@ -1156,7 +1159,7 @@ function returnToPlanner() {
   top: 8px;
   bottom: 12px;
   width: 2px;
-  background: #334155;
+  background: rgba(178, 108, 255, 0.3);
 }
 
 .timeline-row-item {
@@ -1174,9 +1177,9 @@ function returnToPlanner() {
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: #1E293B;
-  border: 2px solid #64748B;
-  color: #94A3B8;
+  background: #1C0F2B;
+  border: 2px solid #5A476E;
+  color: #9C8EAE;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1198,16 +1201,16 @@ function returnToPlanner() {
 }
 
 .timeline-row-item.is-next .timeline-node {
-  background: #1E1B4B;
-  border-color: #38BDF8;
-  color: #38BDF8;
-  box-shadow: 0 0 8px rgba(56, 189, 248, 0.5);
+  background: #25123A;
+  border-color: #FF6082;
+  color: #FF6082;
+  box-shadow: 0 0 10px rgba(255, 96, 130, 0.5);
 }
 
 .node-pulse {
   width: 8px;
   height: 8px;
-  background: #38BDF8;
+  background: #FF6082;
   border-radius: 50%;
   animation: pulse-ring 1.5s infinite;
 }
@@ -1241,32 +1244,32 @@ function returnToPlanner() {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  background: rgba(56, 189, 248, 0.15);
-  border: 1px solid #38BDF8;
-  color: #38BDF8;
+  background: #FFE4F6;
+  border: 1px solid #FF6082;
+  color: #705EFF;
   padding: 1px 7px;
   border-radius: 9999px;
   font-size: 0.65rem;
   font-weight: 800;
   letter-spacing: 0.05em;
-  box-shadow: 0 0 10px rgba(56, 189, 248, 0.25);
+  box-shadow: 0 0 12px rgba(255, 96, 130, 0.35);
 }
 
 .beacon-glow {
   width: 5px;
   height: 5px;
-  background: #38BDF8;
+  background: #FF6082;
   border-radius: 50%;
   animation: pulse-ring 1.2s infinite;
 }
 
 /* Compact Activity Card */
 .compact-act-card {
-  background: #1E293B;
-  border: 1px solid #334155;
+  background: #180D2B;
+  border: 1px solid rgba(178, 108, 255, 0.2);
   border-radius: 10px;
   padding: 10px 14px;
-  border-left: 4px solid #38BDF8;
+  border-left: 4px solid #705EFF;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -1283,10 +1286,10 @@ function returnToPlanner() {
 }
 
 .timeline-row-item.is-next .compact-act-card {
-  border-left-color: #38BDF8;
-  border-color: #0284C7;
-  background: linear-gradient(135deg, #1E293B 0%, #152238 100%);
-  box-shadow: 0 0 14px rgba(2, 132, 199, 0.2);
+  border-left-color: #FF6082;
+  border-color: #B26CFF;
+  background: linear-gradient(135deg, #221235 0%, #2A1733 100%);
+  box-shadow: 0 0 14px rgba(255, 96, 130, 0.25);
 }
 
 .card-top-strip {
@@ -1302,8 +1305,8 @@ function returnToPlanner() {
 }
 
 .seq-num {
-  background: #334155;
-  color: #E2E8F0;
+  background: rgba(178, 108, 255, 0.25);
+  color: #FFE4F6;
   font-size: 0.68rem;
   font-weight: 700;
   padding: 1px 5px;
@@ -1314,7 +1317,7 @@ function returnToPlanner() {
   font-family: monospace;
   font-size: 0.88rem;
   font-weight: 800;
-  color: #38BDF8;
+  color: #FFE4F6;
 }
 
 .status-badge {
@@ -1338,19 +1341,20 @@ function returnToPlanner() {
 }
 
 .badge-next {
-  background: rgba(56, 189, 248, 0.2);
-  color: #38BDF8;
+  background: rgba(255, 96, 130, 0.2);
+  color: #FF6082;
+  border: 1px solid rgba(255, 96, 130, 0.4);
 }
 
 .badge-upcoming {
-  background: #334155;
-  color: #94A3B8;
+  background: #25173B;
+  color: #9C8EAE;
 }
 
 .mini-live-dot {
   width: 5px;
   height: 5px;
-  background: #38BDF8;
+  background: #FF6082;
   border-radius: 50%;
   animation: pulse-ring 1.5s infinite;
 }
@@ -1368,7 +1372,7 @@ function returnToPlanner() {
   flex-wrap: wrap;
   gap: 12px;
   font-size: 0.78rem;
-  color: #94A3B8;
+  color: #C3B4D2;
 }
 
 .act-meta-item {
@@ -1378,11 +1382,11 @@ function returnToPlanner() {
 }
 
 .item-icon {
-  color: #64748B;
+  color: #B26CFF;
 }
 
 .phone-link {
-  color: #38BDF8;
+  color: #B26CFF;
   text-decoration: none;
   font-weight: 600;
 }
@@ -1393,12 +1397,12 @@ function returnToPlanner() {
 
 .act-notes-compact {
   font-size: 0.74rem;
-  color: #CBD5E1;
+  color: #E2CFE9;
   font-style: italic;
-  background: rgba(15, 23, 42, 0.6);
+  background: rgba(28, 15, 43, 0.7);
   border-radius: 4px;
   padding: 4px 8px;
-  border-left: 2px solid #475569;
+  border-left: 2px solid #B26CFF;
 }
 
 /* Coordinator actions row */
@@ -1407,14 +1411,14 @@ function returnToPlanner() {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  border-top: 1px solid #334155;
+  border-top: 1px solid rgba(178, 108, 255, 0.2);
   padding-top: 6px;
   margin-top: 4px;
 }
 
 .coord-label {
   font-size: 0.68rem;
-  color: #94A3B8;
+  color: #C3B4D2;
   font-weight: 600;
 }
 
@@ -1446,8 +1450,8 @@ function returnToPlanner() {
 /* Compact Footer (No Back/Exit buttons) */
 .public-footer-compact {
   margin-top: 8px;
-  background: #1E293B;
-  border: 1px solid #334155;
+  background: #180D2B;
+  border: 1px solid rgba(178, 108, 255, 0.25);
   border-radius: 10px;
   padding: 10px 14px;
   display: flex;
@@ -1471,24 +1475,24 @@ function returnToPlanner() {
 }
 
 .divider {
-  color: #475569;
+  color: rgba(178, 108, 255, 0.4);
 }
 
 .sync-disclaimer {
   font-size: 0.68rem;
-  color: #64748B;
+  color: #9C8EAE;
   text-align: center;
-  border-top: 1px solid #334155;
+  border-top: 1px solid rgba(178, 108, 255, 0.2);
   padding-top: 6px;
 }
 
 .empty-state-compact {
-  background: #1E293B;
-  border: 1px dashed #475569;
+  background: #180D2B;
+  border: 1px dashed rgba(178, 108, 255, 0.3);
   border-radius: 8px;
   padding: 24px;
   text-align: center;
-  color: #94A3B8;
+  color: #9C8EAE;
   font-size: 0.85rem;
 }
 

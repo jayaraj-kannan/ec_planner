@@ -105,7 +105,7 @@ function onSelectEvent(e: Event) {
         <!-- AI Assistant Button -->
         <button
           class="btn btn-sm nav-btn-compact"
-          style="background: linear-gradient(135deg, #0f766e 0%, #0d9488 100%); color: white; border: none; font-weight: 600"
+          style="background: linear-gradient(135deg, #FF6082 0%, #B26CFF 100%); color: white; border: none; font-weight: 700; text-shadow: 0 1px 2px rgba(90, 10, 50, 0.25); box-shadow: 0 2px 6px rgba(255, 96, 130, 0.35)"
           @click="actions.openAgentChatModal()"
           title="Open PlanCraft ADK AI Assistant"
         >

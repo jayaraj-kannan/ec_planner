@@ -297,8 +297,8 @@ const featureCards: FeatureCard[] = [
   {
     id: 'cloud-sync',
     icon: Cloud,
-    iconBg: '#f8fafc',
-    iconColor: '#0f766e',
+    iconBg: '#FFE4F6',
+    iconColor: '#FF6082',
     tag: 'Cloud & Offline',
     title: 'Firebase Auth & Firestore Sync',
     description: 'Sign in effortlessly with Google or Email/Password. Your celebration documents synchronize hierarchically in Firestore with resilient offline caching.',
@@ -609,7 +609,7 @@ const featureCards: FeatureCard[] = [
 .guest-hero-section {
   text-align: center;
   padding: 44px 20px 32px;
-  background: radial-gradient(circle at 50% 10%, rgba(15, 118, 110, 0.08) 0%, rgba(248, 250, 252, 0) 70%), var(--surface-card);
+  background: radial-gradient(circle at 50% 10%, rgba(255, 96, 130, 0.14) 0%, rgba(178, 108, 255, 0.1) 40%, rgba(252, 250, 253, 0) 70%), var(--surface-card);
   border: 1px solid var(--surface-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
@@ -622,9 +622,9 @@ const featureCards: FeatureCard[] = [
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: var(--primary-light);
-  border: 1px solid rgba(15, 118, 110, 0.25);
-  color: var(--primary);
+  background: #FFE4F6;
+  border: 1px solid #E8C1F0;
+  color: #705EFF;
   font-size: 0.74rem;
   font-weight: 700;
   letter-spacing: 0.06em;
@@ -653,7 +653,7 @@ const featureCards: FeatureCard[] = [
 }
 
 .gradient-text {
-  background: linear-gradient(135deg, #0f766e 0%, #14b8a6 100%);
+  background: linear-gradient(135deg, #FF6082 0%, #B26CFF 50%, #705EFF 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -680,13 +680,13 @@ const featureCards: FeatureCard[] = [
   font-size: 0.96rem;
   font-weight: 700;
   border-radius: var(--radius-md);
-  box-shadow: 0 4px 12px rgba(15, 118, 110, 0.25);
+  box-shadow: 0 4px 12px rgba(255, 96, 130, 0.35);
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .btn-hero-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 18px rgba(15, 118, 110, 0.35);
+  box-shadow: 0 6px 18px rgba(255, 96, 130, 0.5);
 }
 
 .btn-hero-secondary {
@@ -1167,7 +1167,8 @@ const featureCards: FeatureCard[] = [
 
 /* ---------------- Bottom CTA Banner ---------------- */
 .bottom-cta-banner {
-  background: linear-gradient(135deg, #0f766e 0%, #115e59 100%);
+  background: linear-gradient(135deg, #1C0F2B 0%, #2A123D 50%, #151136 100%);
+  border: 1px solid rgba(178, 108, 255, 0.3);
   color: white;
   border-radius: var(--radius-lg);
   padding: 36px 32px;

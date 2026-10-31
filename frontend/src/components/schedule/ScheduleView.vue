@@ -123,11 +123,11 @@ function markCompleted(actId: string) {
 
       <div style="display: flex; gap: 10px; flex-wrap: wrap">
         <button class="btn btn-secondary" @click="openPublicView" title="Open public view for guests">
-          <Globe :size="16" style="color: #0284C7" />
+          <Globe :size="16" style="color: #705EFF" />
           <span>View Public Page</span>
         </button>
 
-        <button class="btn btn-primary" style="background: linear-gradient(135deg, #0284C7 0%, #0F766E 100%)"
+        <button class="btn btn-primary" style="background: linear-gradient(135deg, #FF6082 0%, #B26CFF 100%)"
           @click="actions.openRunSheetLiveModal()">
           <PlayCircle :size="17" />
           <span>Launch Live Event-Day Run Sheet</span>
@@ -145,8 +145,8 @@ function markCompleted(actId: string) {
       class="card"
       :style="
         isRunSheetLaunched
-          ? 'background: linear-gradient(135deg, #F0FDF4 0%, #DCFCE7 100%); border: 1px solid #86EFAC;'
-          : 'background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%); border: 1px solid #FCD34D;'
+          ? 'background: linear-gradient(135deg, #FFE4F6 0%, #FFF5FB 100%); border: 1px solid rgba(178, 108, 255, 0.35); box-shadow: 0 4px 16px rgba(255, 96, 130, 0.1);'
+          : 'background: linear-gradient(135deg, #FBF8FF 0%, #F5F0FF 100%); border: 1px dashed rgba(178, 108, 255, 0.4);'
       "
       style="
         display: flex;
@@ -167,22 +167,27 @@ function markCompleted(actId: string) {
             align-items: center;
             justify-content: center;
           "
-          :style="{ background: isRunSheetLaunched ? '#16A34A' : '#D97706' }"
+          :style="{
+            background: isRunSheetLaunched
+              ? 'linear-gradient(135deg, #FF6082 0%, #B26CFF 100%)'
+              : 'linear-gradient(135deg, #B26CFF 0%, #705EFF 100%)',
+            boxShadow: isRunSheetLaunched ? '0 3px 10px rgba(255, 96, 130, 0.35)' : 'none'
+          }"
         >
           <Clock :size="24" />
         </div>
         <div>
           <div
             style="font-weight: 700; font-size: 1rem; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;"
-            :style="{ color: isRunSheetLaunched ? '#166534' : '#92400E' }"
+            :style="{ color: isRunSheetLaunched ? '#705EFF' : '#3B1C54' }"
           >
             <span>{{ isRunSheetLaunched ? 'Event-Day Execution Mode & Public Attendee URL' : 'Live Run Sheet Not Launched Yet' }}</span>
             <span
               style="display: inline-flex; align-items: center; gap: 4px; font-size: 0.7rem; padding: 2px 7px; border-radius: 4px; font-weight: 700; text-transform: uppercase;"
               :style="{
-                background: isRunSheetLaunched ? 'rgba(22, 163, 74, 0.15)' : 'rgba(217, 119, 6, 0.15)',
-                color: isRunSheetLaunched ? '#15803D' : '#B45309',
-                border: isRunSheetLaunched ? '1px solid #86EFAC' : '1px solid #FCD34D',
+                background: isRunSheetLaunched ? 'rgba(112, 94, 255, 0.12)' : 'rgba(178, 108, 255, 0.15)',
+                color: '#705EFF',
+                border: isRunSheetLaunched ? '1px solid rgba(112, 94, 255, 0.3)' : '1px solid rgba(178, 108, 255, 0.3)',
               }"
             >
               <Zap :size="11" />
@@ -191,7 +196,7 @@ function markCompleted(actId: string) {
           </div>
           <div
             style="font-size: 0.82rem;"
-            :style="{ color: isRunSheetLaunched ? '#15803D' : '#B45309' }"
+            :style="{ color: isRunSheetLaunched ? '#5D4CE6' : '#6B517E' }"
           >
             {{
               isRunSheetLaunched
@@ -206,7 +211,7 @@ function markCompleted(actId: string) {
         <button
           v-if="!isRunSheetLaunched"
           class="btn btn-sm btn-primary"
-          style="background: #D97706; border-color: #D97706; color: white"
+          style="background: linear-gradient(135deg, #FF6082 0%, #B26CFF 100%); border: none; color: white; font-weight: 700; box-shadow: 0 2px 10px rgba(255, 96, 130, 0.35)"
           @click="toggleLaunch"
         >
           🚀 Launch Live Run Sheet
@@ -214,7 +219,7 @@ function markCompleted(actId: string) {
         <button
           v-else
           class="btn btn-sm btn-secondary"
-          style="border-color: #86EFAC; color: #166534"
+          style="border-color: #B26CFF; color: #705EFF; background: white"
           @click="copyPublicLink"
         >
           <component :is="copiedPublic ? Check : Copy" :size="14" />
@@ -223,7 +228,7 @@ function markCompleted(actId: string) {
         <button
           v-if="isRunSheetLaunched"
           class="btn btn-sm btn-secondary"
-          style="border-color: #86EFAC; color: #166534"
+          style="border-color: rgba(178, 108, 255, 0.4); color: #705EFF; background: white"
           @click="toggleLaunch"
           title="Pause or unpublish live runsheet from public attendees"
         >
@@ -231,7 +236,13 @@ function markCompleted(actId: string) {
         </button>
         <button
           class="btn btn-sm"
-          :style="{ background: isRunSheetLaunched ? '#16A34A' : '#D97706', color: 'white' }"
+          :style="{
+            background: isRunSheetLaunched ? 'linear-gradient(135deg, #FF6082 0%, #705EFF 100%)' : '#705EFF',
+            color: 'white',
+            fontWeight: '700',
+            border: 'none',
+            boxShadow: isRunSheetLaunched ? '0 2px 8px rgba(112, 94, 255, 0.3)' : 'none'
+          }"
           @click="actions.openRunSheetLiveModal()"
         >
           Open Coordinator View
@@ -279,8 +290,8 @@ function markCompleted(actId: string) {
               font-size: 0.65rem;
               font-weight: 800;
             " :style="{
-              background: act.status === 'completed' ? 'var(--success)' : act.delayMinutes > 0 ? 'var(--danger)' : act.id === activeOrNextActId ? '#0284C7' : 'var(--primary)',
-              boxShadow: '0 0 0 2px ' + (act.status === 'completed' ? 'var(--success)' : act.delayMinutes > 0 ? 'var(--danger)' : act.id === activeOrNextActId ? '#0284C7' : 'var(--primary)'),
+              background: act.status === 'completed' ? 'var(--success)' : act.delayMinutes > 0 ? 'var(--danger)' : act.id === activeOrNextActId ? '#705EFF' : 'var(--primary)',
+              boxShadow: '0 0 0 2px ' + (act.status === 'completed' ? 'var(--success)' : act.delayMinutes > 0 ? 'var(--danger)' : act.id === activeOrNextActId ? '#705EFF' : 'var(--primary)'),
             }">
             {{ idx + 1 }}
           </div>
@@ -288,10 +299,10 @@ function markCompleted(actId: string) {
           <!-- VISUAL CURVE LINE: Smooth bezier curve pointing to the Next Ceremony -->
           <div v-if="act.id === activeOrNextActId && act.status !== 'completed'" style="position: relative; height: 22px; margin-top: -4px; margin-bottom: 2px; display: flex; align-items: center">
             <svg style="position: absolute; left: -20px; top: 0; width: 90px; height: 24px; overflow: visible" viewBox="0 0 90 24" fill="none">
-              <path d="M 2 4 C 18 4, 24 20, 48 20 L 86 20" stroke="#0284C7" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="3 2" />
-              <circle cx="86" cy="20" r="3" fill="#0284C7" />
+              <path d="M 2 4 C 18 4, 24 20, 48 20 L 86 20" stroke="#B26CFF" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="3 2" />
+              <circle cx="86" cy="20" r="3" fill="#FF6082" />
             </svg>
-            <span style="margin-left: 65px; font-size: 0.68rem; font-weight: 800; color: #0284C7; background: #E0F2FE; border: 1px solid #7DD3FC; padding: 1px 7px; border-radius: 9999px">
+            <span style="margin-left: 65px; font-size: 0.68rem; font-weight: 800; color: #705EFF; background: #FFE4F6; border: 1px solid #E8C1F0; padding: 1px 7px; border-radius: 9999px">
               ⚡ NEXT UP
             </span>
           </div>
@@ -303,7 +314,7 @@ function markCompleted(actId: string) {
               padding: 12px 16px;
               border: 1px solid var(--surface-border);
             "
-            :style="act.id === activeOrNextActId && act.status !== 'completed' ? 'border-color: #0284C7; box-shadow: 0 2px 10px rgba(2, 132, 199, 0.12)' : ''">
+            :style="act.id === activeOrNextActId && act.status !== 'completed' ? 'border-color: #B26CFF; box-shadow: 0 2px 12px rgba(178, 108, 255, 0.25)' : ''">
             <div
               style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 10px">
               <div>

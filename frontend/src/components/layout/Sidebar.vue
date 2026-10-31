@@ -117,7 +117,7 @@ function setTab(tab: ActiveTab) {
     <div v-if="authState.user" style="padding: 6px 12px 0 12px">
       <button
         class="btn"
-        style="width: 100%; font-size: 0.8rem; padding: 8px 10px; background: #f0fdfa; color: var(--primary); border: 1px solid #ccfbf1; font-weight: 600"
+        style="width: 100%; font-size: 0.8rem; padding: 8px 10px; background: #FFE4F6; color: #705EFF; border: 1px solid #E8C1F0; font-weight: 700"
         @click="actions.openAgentChatModal()"
       >
         <Sparkles :size="14" />

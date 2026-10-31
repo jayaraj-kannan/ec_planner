@@ -1248,10 +1248,10 @@ function navigateToTasksTab() {
 
 .context-banner {
   padding: 8px 18px;
-  background: #f0fdfa;
-  border-bottom: 1px solid #ccfbf1;
+  background: #FFE4F6;
+  border-bottom: 1px solid #E8C1F0;
   font-size: 0.78rem;
-  color: #0f766e;
+  color: #705EFF;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -1603,8 +1603,9 @@ function navigateToTasksTab() {
 
 .a2ui-card-header {
   padding: 8px 12px;
-  background: linear-gradient(135deg, #0f766e 0%, #0d9488 100%);
+  background: linear-gradient(135deg, #FF6082 0%, #B26CFF 100%);
   color: white;
+  text-shadow: 0 1px 2px rgba(90, 10, 50, 0.25);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -1722,8 +1723,9 @@ function navigateToTasksTab() {
 .time-badge {
   font-size: 0.74rem;
   font-weight: 700;
-  color: var(--primary);
-  background: #f0fdfa;
+  color: #705EFF;
+  background: #FFE4F6;
+  border: 1px solid rgba(178, 108, 255, 0.3);
   padding: 3px 6px;
   border-radius: 4px;
   height: fit-content;
@@ -1885,9 +1887,9 @@ function navigateToTasksTab() {
 .card-instruction-hint {
   font-size: 0.74rem;
   font-weight: 600;
-  color: #0f766e;
-  background: #f0fdfa;
-  border: 1px dashed #99f6e4;
+  color: #705EFF;
+  background: #FFE4F6;
+  border: 1px dashed #E8C1F0;
   padding: 6px 10px;
   border-radius: 6px;
   margin-bottom: 8px;
@@ -1912,12 +1914,12 @@ function navigateToTasksTab() {
   background: #f8fafc;
   border-color: var(--primary);
   transform: translateY(-1px);
-  box-shadow: 0 4px 10px rgba(15, 118, 110, 0.08);
+  box-shadow: 0 4px 10px rgba(255, 96, 130, 0.15);
 }
 
 .interactive-list-item.is-selected {
   border-color: var(--primary);
-  background: #f0fdfa;
+  background: #FFF0F8;
 }
 
 .item-header-row {
@@ -1961,9 +1963,9 @@ function navigateToTasksTab() {
 
 .btn-select-chip {
   padding: 3px 8px;
-  background: #f0fdfa;
-  border: 1px solid #99f6e4;
-  color: #0f766e;
+  background: #FFE4F6;
+  border: 1px solid #E8C1F0;
+  color: #705EFF;
   border-radius: 6px;
   font-size: 0.7rem;
   font-weight: 600;
@@ -1973,9 +1975,9 @@ function navigateToTasksTab() {
 }
 
 .btn-select-chip:hover {
-  background: #0f766e;
+  background: #FF6082;
   color: #ffffff;
-  border-color: #0f766e;
+  border-color: #FF6082;
 }
 
 .clickable-table-row {
