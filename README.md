@@ -9,6 +9,7 @@
 [![Vue 3](https://img.shields.io/badge/Vue-3.5%20%2B%20TypeScript-42b883)](https://vuejs.org/)
 [![Google ADK](https://img.shields.io/badge/Google%20ADK-Agent%20Engine%20%2B%20A2UI-4285F4)](https://cloud.google.com/)
 [![Firebase](https://img.shields.io/badge/Firebase-Auth%20%26%20Firestore-FFA611)](https://firebase.google.com/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ---
 
@@ -127,12 +128,75 @@ npm run install:agent
 
 ---
 
-## 🤖 Google ADK Copilot & A2UI
+## 🧠 Gen AI Services & Architecture
 
-PlanCraft includes an embedded AI Event Planner Copilot that communicates via the **Agent-to-Agent (A2A)** and **A2UI** protocol:
-- **Natural Language Orchestration**: Ask *"Create a wedding checklist"*, *"Calculate my catering budget"*, or *"What is my event readiness score?"*.
-- **A2UI Rich Cards**: Emits structured interactive cards for instant review and execution inside the chat modal.
-- **Dual-Surface Compatibility**: Works seamlessly both inside the PlanCraft frontend and inside Google ADK Web (`adk web`).
+PlanCraft is powered by a multi-layered Google Generative AI architecture combining foundation models, agent frameworks, managed runtimes, and rich UI protocols:
+
+| Gen AI Layer / Service | Technology & Version | Purpose in PlanCraft |
+|---|---|---|
+| **Foundation LLM** | **Google Gemini** (`gemini-3.8-flash` & `gemini-2.5-flash`) via `google-genai` SDK v2.33.0 | Multi-turn reasoning, intent classification, natural language dialogue, and parameter extraction. |
+| **Agent Framework** | **Google ADK** (Agent Development Kit v2.13.0) | Declarative agent definition (`Agent`), system prompt lifecycle, and deterministic function tool calling. |
+| **Cloud Agent Runtime** | **Google Vertex AI Reasoning Engine** (`projects/28908034002/locations/us-central1/reasoningEngines/5372119530191454208`) | Managed, serverless execution of the ADK agent on Google Cloud Vertex AI Agent Engine. |
+| **UI Protocol** | **Google A2UI (Agent-to-UI v0.8)** via `a2ui-agent-sdk` | Middleware callback (`a2ui_callback`) translating model outputs into structured interactive display cards. |
+| **Agent Protocol** | **Google A2A (Agent-to-Agent)** | SSE streaming protocol connecting the client frontend and FastAPI proxy to the agent runtime. |
+| **Session Memory** | **ADK Multi-Turn Session Persistence** (SQLite / Vertex Memory) | Maintains conversation history across inquiries, refining event parameters and recalling past turns. |
+| **Local Dev Playground** | **Google ADK Web** (`adk web`) | Dedicated developer sandbox on port 8080 for real-time prompt engineering and tool inspection. |
+
+---
+
+## 🎯 AI-Powered Features & Capabilities
+
+PlanCraft provides end-to-end event planning assistance through 10 registered function tools and conversational intelligence:
+
+### 1. 📋 Guided Event Creation Questionnaire
+- When users express intent to plan an event, the AI avoids premature database writes and initiates an intuitive, structured questionnaire:
+  - **Event Name & Type** (Wedding, 1st Birthday, 25th Anniversary, Reception, Corporate Summit)
+  - **Date & Venue Location**
+  - **Budget Limit & Currency**
+  - **Expected Guest Headcount**
+  - **Food & Catering Needs** (Buffet, plated dinner, cocktail bar, dietary preferences)
+  - **Aesthetic Theme & Special Instructions**
+- Upon gathering details, the AI simultaneously executes `create_event` and `generate_checklist_tasks` to initialize the celebration with an actionable roadmap.
+
+### 2. ⚡ Autonomous Event Lifecycle Management (5 Tools)
+- **`create_event`**: Initializes celebrations in the database with dates, budgets, headcount, and catering instructions.
+- **`update_event`**: Dynamically modifies event parameters (dates, budgets, guest headcounts, venues, themes, status).
+- **`get_event_details`**: Retrieves full event parameters, venue details, and live day countdowns.
+- **`list_events`**: Fetches all active celebrations and displays them as selectable cards.
+- **`delete_event`**: Safely archives or deletes completed celebrations.
+
+### 3. 💰 Intelligent Budget Allocation (`calculate_budget_breakdown`)
+- Automatically divides total planned budgets across event-specific categories:
+  - **Weddings / Receptions**: 45% Venue & Catering, 15% Decor & Florals, 12% Photography, 8% Music/DJ, 8% Attire, 4% Stationery, 8% Buffer.
+  - **Birthdays / Anniversaries / Baby Showers**: Customized percentage distributions.
+- Computes per-guest target spend and reserves emergency buffers for last-minute adjustments.
+
+### 4. 📅 Timeline-Adaptive Milestone Checklist (`generate_checklist_tasks`)
+- Generates prioritized to-dos categorized by time remaining until the big day:
+  - **Early Phase** (Vendor vetting, venue deposits, theme selection)
+  - **Mid Phase** (Invitations, menu tastings, attire fittings)
+  - **Countdown Phase** (RSVP finalization, seating charts, final vendor confirmations)
+  - **Event Day** (Emergency kit prep, vendor cue checks, run sheet sync)
+
+### 5. ⏱️ Day-Of Run Sheet & Ceremony Sequencer (`generate_day_of_run_sheet`)
+- Generates minute-by-minute schedules with assigned lead persons, location cues, and buffer intervals.
+- Directly feeds into the real-time WebSocket run sheet broadcast and public attendee view.
+
+### 6. 🤝 Vendor Vetting & Guidance (`recommend_vendors`)
+- Delivers category-specific interview questions, typical deposit percentages, and contract protection tips for photographers, caterers, florists, and DJs.
+
+### 7. 🎯 Automated Event Readiness & Risk Analyzer (`analyze_event_readiness`)
+- Computes an **Event Readiness Score (0–100%)** factoring:
+  - Task completion velocity vs. remaining timeline
+  - Guest RSVP response rates and dietary confirmations
+  - Budget spend pacing vs. allocated category caps
+- Flags critical bottlenecks (e.g. unbooked vendors or overdue high-priority milestones).
+
+### 8. 🎴 A2UI Interactive Rich Cards
+- Tool outputs render directly as interactive UI surfaces inside the chat modal:
+  - Clickable event cards that switch the active workspace
+  - Schedule slot chips that trigger instant timing adjustments
+  - Visual budget breakdown progress bars and readiness meters
 
 ---
 
@@ -169,5 +233,43 @@ PlanCraft supports two flexible authentication modes:
 
 ---
 
-## 📜 License
-Built for hackathons and production event management. Distributed under the **MIT License**.
+## 👥 Credits & Authors
+
+**PlanCraft** was designed and developed by:
+- **Jayaraj Kannan** ([@jayarajkannan95](https://github.com/jayarajkannan95)) — *Architecture, Full-Stack Engineering & ADK Agent Development*
+- **Email**: [jayarajkannan95@gmail.com](mailto:jayarajkannan95@gmail.com)
+
+### 🌟 Acknowledgements & Ecosystem
+- **Google Cloud & Vertex AI**: For Google ADK (Agent Development Kit), Gemini 2.5 & 3.8 Flash models, and Vertex AI Reasoning Engine runtime.
+- **Google Cloud Run**: Serverless container infrastructure hosting the production deployment.
+- **Firebase**: Realtime Auth and Firestore hierarchical database.
+- **Vue.js**: Vue 3 Composition API & Vite tooling.
+- **Lucide Icons**: Beautiful, accessible icon library.
+
+---
+
+## 📜 MIT License
+
+```text
+MIT License
+
+Copyright (c) 2026 Jayaraj Kannan
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
